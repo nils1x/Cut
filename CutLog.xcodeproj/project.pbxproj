@@ -1,0 +1,668 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		06AC767B161545ED821C903B /* CutLogWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358FEDB859AF3497E2213812 /* CutLogWidgetData.swift */; };
+		10B1999FA1B3170E1ED64729 /* WorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B63F939D09746BD8BA015144 /* WorkoutView.swift */; };
+		28048FCFDB75CFD03ABFA088 /* CutLogWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6DB64FDB8E4930E3245BE0C /* CutLogWidget.swift */; };
+		327B6034C00CD0985BA49D0F /* MealEstimateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18D64CDCCAFDD31C940C659 /* MealEstimateService.swift */; };
+		360AFA616726E68790F3B03E /* CameraPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51835279B7C9238707C83F0D /* CameraPicker.swift */; };
+		3CF240E54733FDB703E97397 /* BarcodeLookupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F72512D385340811ADBF72FF /* BarcodeLookupService.swift */; };
+		4AC64966B616ACF0E43F33EE /* CutLogWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358FEDB859AF3497E2213812 /* CutLogWidgetData.swift */; };
+		4E9297E51426B64EF169CE72 /* BarcodeScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67BBF06C17BE550913C28993 /* BarcodeScannerView.swift */; };
+		56D582F2F03387E7DC46988B /* WorkoutReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 829C57556046EF9878780275 /* WorkoutReminder.swift */; };
+		5F3EFB084D57EFB0A286927A /* CutLogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F5801CE05888537F903B9D4 /* CutLogTests.swift */; };
+		6E73A25781B189BA497A01A6 /* CutLogWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9DF2D3F2A6C6388A282D1149 /* CutLogWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6F848F8CF1E762991268A2B8 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAAB3BCF7062F32B671FF00F /* AppStore.swift */; };
+		7295EB02EFF3AE47C09370D8 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E509DAF6995A7BD4338371 /* HistoryView.swift */; };
+		7B0FD48DB24EEE321CC9920C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E164BF41376D4B57908CF683 /* SettingsView.swift */; };
+		7CDEC74F87C7E914CA112D4A /* CutLogApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFECDAE37723D950461C0691 /* CutLogApp.swift */; };
+		93F68C79E91848A82A37411A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E72A27965B1B2BC51DBAA3EE /* Assets.xcassets */; };
+		9A9AD0682DBD30BF88E72C90 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914A17D2D0EE78F2A9B20A97 /* RootView.swift */; };
+		B2C7A5C45554A4BA4C656006 /* CutLogWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358FEDB859AF3497E2213812 /* CutLogWidgetData.swift */; };
+		BE392D2E7F15A57E0A006C6F /* AddFoodView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5EABD418F91F259AA2B955E /* AddFoodView.swift */; };
+		C0DACEC6C48E847E30E32175 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA9671F2AAA6349982D33E41 /* HealthKit.framework */; };
+		C30290F206B826BD16F53DDB /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3921769E72357CC787AC34CD /* Models.swift */; };
+		C65D58C383DBEE0CC95AB7E1 /* HealthKitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C59FD45B248704CE1AA1564 /* HealthKitStore.swift */; };
+		D0109B0C6D1289DDFF3709E2 /* TrainingPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A6FA662302A5F2936F7136 /* TrainingPlanView.swift */; };
+		E026BD93ECF6CD9482C3BE1D /* AddWeightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361E22463CCD6732B954E2BF /* AddWeightView.swift */; };
+		FBDCEBCD322E8D606B2428BF /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F7A5E2ABB23EC944C253C1 /* TodayView.swift */; };
+		FD3A62D0A882B90F77754E77 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D4BF39075F6C57DDD4DFCE9 /* WidgetSnapshot.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		58A7316DCF3F31AF12DE0B9E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FC042BEF0AFB974D7B6E67AB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A63A414B3AF0E73A30BDF3B9;
+			remoteInfo = CutLog;
+		};
+		5E49D84E3D414A35714627ED /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FC042BEF0AFB974D7B6E67AB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 845C8C15FD48A7E1FB3DC511;
+			remoteInfo = CutLogWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		2DF731294339C371C82477B0 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				6E73A25781B189BA497A01A6 /* CutLogWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		08F7A5E2ABB23EC944C253C1 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		0C59FD45B248704CE1AA1564 /* HealthKitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitStore.swift; sourceTree = "<group>"; };
+		0F5801CE05888537F903B9D4 /* CutLogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutLogTests.swift; sourceTree = "<group>"; };
+		358FEDB859AF3497E2213812 /* CutLogWidgetData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutLogWidgetData.swift; sourceTree = "<group>"; };
+		361E22463CCD6732B954E2BF /* AddWeightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWeightView.swift; sourceTree = "<group>"; };
+		3921769E72357CC787AC34CD /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		43A6FA662302A5F2936F7136 /* TrainingPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingPlanView.swift; sourceTree = "<group>"; };
+		4D4BF39075F6C57DDD4DFCE9 /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
+		51835279B7C9238707C83F0D /* CameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPicker.swift; sourceTree = "<group>"; };
+		54A03E1F0054A2B5E5210950 /* CutLog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CutLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5651ADE57A2B0381E0A1C0F0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		67BBF06C17BE550913C28993 /* BarcodeScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScannerView.swift; sourceTree = "<group>"; };
+		6AAF1ED0088324FE105EE0E1 /* CutLogTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = CutLogTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7F91A3D51FFAAAAD2908F5CF /* CutLog.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CutLog.entitlements; sourceTree = "<group>"; };
+		829C57556046EF9878780275 /* WorkoutReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutReminder.swift; sourceTree = "<group>"; };
+		914A17D2D0EE78F2A9B20A97 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		9627D1858B24AACD52E1A051 /* CutLogWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CutLogWidget.entitlements; sourceTree = "<group>"; };
+		9DF2D3F2A6C6388A282D1149 /* CutLogWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CutLogWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A18D64CDCCAFDD31C940C659 /* MealEstimateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealEstimateService.swift; sourceTree = "<group>"; };
+		AA9671F2AAA6349982D33E41 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
+		AFECDAE37723D950461C0691 /* CutLogApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutLogApp.swift; sourceTree = "<group>"; };
+		B63F939D09746BD8BA015144 /* WorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutView.swift; sourceTree = "<group>"; };
+		B6DB64FDB8E4930E3245BE0C /* CutLogWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutLogWidget.swift; sourceTree = "<group>"; };
+		DAAB3BCF7062F32B671FF00F /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
+		E164BF41376D4B57908CF683 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		E2E509DAF6995A7BD4338371 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		E5EABD418F91F259AA2B955E /* AddFoodView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFoodView.swift; sourceTree = "<group>"; };
+		E72A27965B1B2BC51DBAA3EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F72512D385340811ADBF72FF /* BarcodeLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeLookupService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C9EB4773AF3CE2E332A35176 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C0DACEC6C48E847E30E32175 /* HealthKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		07EE1D9A831BEF659623B177 /* CutLog */ = {
+			isa = PBXGroup;
+			children = (
+				E5EABD418F91F259AA2B955E /* AddFoodView.swift */,
+				361E22463CCD6732B954E2BF /* AddWeightView.swift */,
+				DAAB3BCF7062F32B671FF00F /* AppStore.swift */,
+				E72A27965B1B2BC51DBAA3EE /* Assets.xcassets */,
+				F72512D385340811ADBF72FF /* BarcodeLookupService.swift */,
+				67BBF06C17BE550913C28993 /* BarcodeScannerView.swift */,
+				51835279B7C9238707C83F0D /* CameraPicker.swift */,
+				7F91A3D51FFAAAAD2908F5CF /* CutLog.entitlements */,
+				AFECDAE37723D950461C0691 /* CutLogApp.swift */,
+				0C59FD45B248704CE1AA1564 /* HealthKitStore.swift */,
+				E2E509DAF6995A7BD4338371 /* HistoryView.swift */,
+				A18D64CDCCAFDD31C940C659 /* MealEstimateService.swift */,
+				3921769E72357CC787AC34CD /* Models.swift */,
+				914A17D2D0EE78F2A9B20A97 /* RootView.swift */,
+				E164BF41376D4B57908CF683 /* SettingsView.swift */,
+				08F7A5E2ABB23EC944C253C1 /* TodayView.swift */,
+				43A6FA662302A5F2936F7136 /* TrainingPlanView.swift */,
+				4D4BF39075F6C57DDD4DFCE9 /* WidgetSnapshot.swift */,
+				829C57556046EF9878780275 /* WorkoutReminder.swift */,
+				B63F939D09746BD8BA015144 /* WorkoutView.swift */,
+			);
+			path = CutLog;
+			sourceTree = "<group>";
+		};
+		0BEAA2DF0F90FAFA40A264D8 /* CutLogTests */ = {
+			isa = PBXGroup;
+			children = (
+				0F5801CE05888537F903B9D4 /* CutLogTests.swift */,
+			);
+			path = CutLogTests;
+			sourceTree = "<group>";
+		};
+		464D6922AF69605959115C9D /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				358FEDB859AF3497E2213812 /* CutLogWidgetData.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		63A73DD85C75FBF945C2FB6E /* CutLogWidget */ = {
+			isa = PBXGroup;
+			children = (
+				9627D1858B24AACD52E1A051 /* CutLogWidget.entitlements */,
+				B6DB64FDB8E4930E3245BE0C /* CutLogWidget.swift */,
+				5651ADE57A2B0381E0A1C0F0 /* Info.plist */,
+			);
+			path = CutLogWidget;
+			sourceTree = "<group>";
+		};
+		69F11477E0437A2CB706B118 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AA9671F2AAA6349982D33E41 /* HealthKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		7272D3C675B9082C7312CF71 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				54A03E1F0054A2B5E5210950 /* CutLog.app */,
+				6AAF1ED0088324FE105EE0E1 /* CutLogTests.xctest */,
+				9DF2D3F2A6C6388A282D1149 /* CutLogWidget.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D77298F25FD09A91D798E372 = {
+			isa = PBXGroup;
+			children = (
+				07EE1D9A831BEF659623B177 /* CutLog */,
+				0BEAA2DF0F90FAFA40A264D8 /* CutLogTests */,
+				63A73DD85C75FBF945C2FB6E /* CutLogWidget */,
+				464D6922AF69605959115C9D /* Shared */,
+				69F11477E0437A2CB706B118 /* Frameworks */,
+				7272D3C675B9082C7312CF71 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		845C8C15FD48A7E1FB3DC511 /* CutLogWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2E75BC91F28F9895ACC3E4B2 /* Build configuration list for PBXNativeTarget "CutLogWidget" */;
+			buildPhases = (
+				90AA1BF1682AE3D8EBC466DA /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CutLogWidget;
+			packageProductDependencies = (
+			);
+			productName = CutLogWidget;
+			productReference = 9DF2D3F2A6C6388A282D1149 /* CutLogWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		A63A414B3AF0E73A30BDF3B9 /* CutLog */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 17F5B5407C8ED9A03029B514 /* Build configuration list for PBXNativeTarget "CutLog" */;
+			buildPhases = (
+				AA04C3A3F8F2E6BB479F8987 /* Sources */,
+				08ACC6D4ECD214891588387F /* Resources */,
+				C9EB4773AF3CE2E332A35176 /* Frameworks */,
+				2DF731294339C371C82477B0 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				67BC2F2FA4190975341BECB0 /* PBXTargetDependency */,
+			);
+			name = CutLog;
+			packageProductDependencies = (
+			);
+			productName = CutLog;
+			productReference = 54A03E1F0054A2B5E5210950 /* CutLog.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F8573A5812A4BB07D4D5C808 /* CutLogTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C706FC75B7A61872BED5EAC5 /* Build configuration list for PBXNativeTarget "CutLogTests" */;
+			buildPhases = (
+				089866E8C47CEECC8C68029E /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3E6C79BE8B5F4626A3CB6A19 /* PBXTargetDependency */,
+			);
+			name = CutLogTests;
+			packageProductDependencies = (
+			);
+			productName = CutLogTests;
+			productReference = 6AAF1ED0088324FE105EE0E1 /* CutLogTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FC042BEF0AFB974D7B6E67AB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					845C8C15FD48A7E1FB3DC511 = {
+						ProvisioningStyle = Automatic;
+					};
+					A63A414B3AF0E73A30BDF3B9 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 37C7FEE6E3E8FA78F0E6D650 /* Build configuration list for PBXProject "CutLog" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = D77298F25FD09A91D798E372;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 7272D3C675B9082C7312CF71 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A63A414B3AF0E73A30BDF3B9 /* CutLog */,
+				845C8C15FD48A7E1FB3DC511 /* CutLogWidget */,
+				F8573A5812A4BB07D4D5C808 /* CutLogTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		08ACC6D4ECD214891588387F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				93F68C79E91848A82A37411A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		089866E8C47CEECC8C68029E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5F3EFB084D57EFB0A286927A /* CutLogTests.swift in Sources */,
+				B2C7A5C45554A4BA4C656006 /* CutLogWidgetData.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		90AA1BF1682AE3D8EBC466DA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				28048FCFDB75CFD03ABFA088 /* CutLogWidget.swift in Sources */,
+				4AC64966B616ACF0E43F33EE /* CutLogWidgetData.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA04C3A3F8F2E6BB479F8987 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BE392D2E7F15A57E0A006C6F /* AddFoodView.swift in Sources */,
+				E026BD93ECF6CD9482C3BE1D /* AddWeightView.swift in Sources */,
+				6F848F8CF1E762991268A2B8 /* AppStore.swift in Sources */,
+				3CF240E54733FDB703E97397 /* BarcodeLookupService.swift in Sources */,
+				4E9297E51426B64EF169CE72 /* BarcodeScannerView.swift in Sources */,
+				360AFA616726E68790F3B03E /* CameraPicker.swift in Sources */,
+				7CDEC74F87C7E914CA112D4A /* CutLogApp.swift in Sources */,
+				06AC767B161545ED821C903B /* CutLogWidgetData.swift in Sources */,
+				C65D58C383DBEE0CC95AB7E1 /* HealthKitStore.swift in Sources */,
+				7295EB02EFF3AE47C09370D8 /* HistoryView.swift in Sources */,
+				327B6034C00CD0985BA49D0F /* MealEstimateService.swift in Sources */,
+				C30290F206B826BD16F53DDB /* Models.swift in Sources */,
+				9A9AD0682DBD30BF88E72C90 /* RootView.swift in Sources */,
+				7B0FD48DB24EEE321CC9920C /* SettingsView.swift in Sources */,
+				FBDCEBCD322E8D606B2428BF /* TodayView.swift in Sources */,
+				D0109B0C6D1289DDFF3709E2 /* TrainingPlanView.swift in Sources */,
+				FD3A62D0A882B90F77754E77 /* WidgetSnapshot.swift in Sources */,
+				56D582F2F03387E7DC46988B /* WorkoutReminder.swift in Sources */,
+				10B1999FA1B3170E1ED64729 /* WorkoutView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3E6C79BE8B5F4626A3CB6A19 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A63A414B3AF0E73A30BDF3B9 /* CutLog */;
+			targetProxy = 58A7316DCF3F31AF12DE0B9E /* PBXContainerItemProxy */;
+		};
+		67BC2F2FA4190975341BECB0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 845C8C15FD48A7E1FB3DC511 /* CutLogWidget */;
+			targetProxy = 5E49D84E3D414A35714627ED /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		427F6810B2983A9AE2E000C1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = CutLogWidget/CutLogWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K4JP8NT64L;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CutLogWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nils.CutLog.Widget;
+				PRODUCT_NAME = CutLogWidget;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		49992CC3B608736860DC69F9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Cut.;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		54C062EF29DFFD6A1F232AF0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = CutLog/CutLog.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K4JP8NT64L;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Cut. uses the camera to scan meal photos and product barcodes.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Cut. can read your most recent body weight from Apple Health when you enable sync.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Cut. can write food, body weight and strength workouts to Apple Health when you enable sync.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Choose a meal photo to estimate its nutrition locally on this device.";
+				INFOPLIST_KEY_NSUserNotificationUsageDescription = "Cut. uses a short reminder when your next workout is due.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nils.CutLog;
+				PRODUCT_NAME = CutLog;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		5D104A31EC684A25698F9869 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nils.CutLogTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CutLog.app/CutLog";
+			};
+			name = Debug;
+		};
+		6715006F7E7612113953286A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Cut.;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		68B8E23DE49CC88071B7DEB1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = CutLogWidget/CutLogWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K4JP8NT64L;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CutLogWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nils.CutLog.Widget;
+				PRODUCT_NAME = CutLogWidget;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D97B316F9C226A8D0238F0B2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nils.CutLogTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CutLog.app/CutLog";
+			};
+			name = Release;
+		};
+		DAEE768F2FFC222832E4811F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = CutLog/CutLog.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K4JP8NT64L;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Cut. uses the camera to scan meal photos and product barcodes.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Cut. can read your most recent body weight from Apple Health when you enable sync.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Cut. can write food, body weight and strength workouts to Apple Health when you enable sync.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Choose a meal photo to estimate its nutrition locally on this device.";
+				INFOPLIST_KEY_NSUserNotificationUsageDescription = "Cut. uses a short reminder when your next workout is due.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nils.CutLog;
+				PRODUCT_NAME = CutLog;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		17F5B5407C8ED9A03029B514 /* Build configuration list for PBXNativeTarget "CutLog" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DAEE768F2FFC222832E4811F /* Debug */,
+				54C062EF29DFFD6A1F232AF0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2E75BC91F28F9895ACC3E4B2 /* Build configuration list for PBXNativeTarget "CutLogWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				68B8E23DE49CC88071B7DEB1 /* Debug */,
+				427F6810B2983A9AE2E000C1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		37C7FEE6E3E8FA78F0E6D650 /* Build configuration list for PBXProject "CutLog" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49992CC3B608736860DC69F9 /* Debug */,
+				6715006F7E7612113953286A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C706FC75B7A61872BED5EAC5 /* Build configuration list for PBXNativeTarget "CutLogTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5D104A31EC684A25698F9869 /* Debug */,
+				D97B316F9C226A8D0238F0B2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = FC042BEF0AFB974D7B6E67AB /* Project object */;
+}

@@ -1,0 +1,73 @@
+name: CutLog
+options:
+  bundleIdPrefix: com.nils
+  deploymentTarget:
+    iOS: '27.0'
+settings:
+  base:
+    SWIFT_VERSION: '6.0'
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_CFBundleDisplayName: Cut.
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    TARGETED_DEVICE_FAMILY: '1'
+targets:
+  CutLog:
+    type: application
+    platform: iOS
+    sources:
+      - path: CutLog
+      - path: Shared
+    entitlements:
+      path: CutLog/CutLog.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nils.CutLog
+        PRODUCT_NAME: CutLog
+        MARKETING_VERSION: 1.0
+        CURRENT_PROJECT_VERSION: 1
+        DEVELOPMENT_TEAM: 69X37B2BSP
+        CODE_SIGN_STYLE: Automatic
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: Choose a meal photo to estimate its nutrition locally on this device.
+        INFOPLIST_KEY_NSCameraUsageDescription: Cut. uses the camera to scan meal photos and product barcodes.
+        INFOPLIST_KEY_NSHealthShareUsageDescription: Cut. can read your most recent body weight from Apple Health when you enable sync.
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: Cut. can write food, body weight and strength workouts to Apple Health when you enable sync.
+        INFOPLIST_KEY_NSUserNotificationUsageDescription: Cut. uses a short reminder when your next workout is due.
+    dependencies:
+      - sdk: HealthKit.framework
+      - target: CutLogWidget
+        embed: true
+    scheme:
+      testTargets:
+        - CutLogTests
+  CutLogWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: CutLogWidget
+      - path: Shared
+    entitlements:
+      path: CutLogWidget/CutLogWidget.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nils.CutLog.Widget
+        PRODUCT_NAME: CutLogWidget
+        MARKETING_VERSION: 1.0
+        CURRENT_PROJECT_VERSION: 1
+        DEVELOPMENT_TEAM: 69X37B2BSP
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: CutLogWidget/Info.plist
+        APPLICATION_EXTENSION_API_ONLY: YES
+  CutLogTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: CutLogTests
+      - path: Shared
+    dependencies:
+      - target: CutLog
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nils.CutLogTests
