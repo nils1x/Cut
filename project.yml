@@ -21,6 +21,10 @@ targets:
       - path: Shared
     entitlements:
       path: CutLog/CutLog.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.security.application-groups:
+          - group.com.nils.CutLog
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.nils.CutLog
@@ -49,6 +53,9 @@ targets:
       - path: Shared
     entitlements:
       path: CutLogWidget/CutLogWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.nils.CutLog
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.nils.CutLog.Widget
@@ -71,3 +78,5 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.nils.CutLogTests
+        DEVELOPMENT_TEAM: 69X37B2BSP
+        CODE_SIGN_STYLE: Automatic

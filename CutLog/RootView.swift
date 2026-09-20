@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct RootView: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.scenePhase) private var scenePhase
     var body: some View {
         TabView {
             TodayView()
@@ -13,5 +15,12 @@ struct RootView: View {
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
         .tint(.orange)
+        .task { await store.importLatestHealthWeight() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                store.refreshWidget()
+                Task { await store.importLatestHealthWeight() }
+            }
+        }
     }
 }

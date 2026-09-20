@@ -19,14 +19,46 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
 final class ScannerController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
     var onCode: ((String) -> Void)?
     var onFailure: ((String) -> Void)?
-    private let session = AVCaptureSession()
+    // Configuration happens once before work is queued. Start/stop stay on one serial queue.
+    nonisolated(unsafe) private let session = AVCaptureSession()
+    private let sessionQueue = DispatchQueue(label: "com.nils.CutLog.barcode")
+    private var isVisible = false
+    private var isRequestingCamera = false
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private var didScan = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
-        configureSession()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        isVisible = true
+        if previewLayer != nil {
+            sessionQueue.async { [session] in session.startRunning() }
+            return
+        }
+        guard !isRequestingCamera else { return }
+        isRequestingCamera = true
+        Task { [weak self] in
+            defer { self?.isRequestingCamera = false }
+            let granted: Bool
+            switch AVCaptureDevice.authorizationStatus(for: .video) {
+            case .authorized: granted = true
+            case .notDetermined: granted = await AVCaptureDevice.requestAccess(for: .video)
+            default: granted = false
+            }
+            guard let self, self.isVisible else { return }
+            if granted { self.configureSession() }
+            else { self.onFailure?("Camera access is off. Enable Camera for Cut. in iPhone Settings, or enter food manually.") }
+        }
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        isVisible = false
+        sessionQueue.async { [session] in session.stopRunning() }
     }
 
     override func viewDidLayoutSubviews() {
@@ -56,8 +88,9 @@ final class ScannerController: UIViewController, AVCaptureMetadataOutputObjectsD
         layer.videoGravity = .resizeAspectFill
         view.layer.addSublayer(layer)
         previewLayer = layer
+        layer.frame = view.bounds
 
-        session.startRunning()
+        sessionQueue.async { [session] in session.startRunning() }
     }
 
     nonisolated func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
@@ -68,11 +101,11 @@ final class ScannerController: UIViewController, AVCaptureMetadataOutputObjectsD
     }
 
     private func handleScannedCode(_ value: String) {
-        guard !didScan else { return }
+        guard !didScan, isVisible else { return }
         didScan = true
-        session.stopRunning()
+        sessionQueue.async { [session] in session.stopRunning() }
         onCode?(value)
     }
 
-    deinit { session.stopRunning() }
+    deinit { sessionQueue.async { [session] in session.stopRunning() } }
 }

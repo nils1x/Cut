@@ -4,146 +4,98 @@ struct WorkoutView: View {
 	@Environment(AppStore.self) private var store
 	@Environment(\.dismiss) private var dismiss
 	let template: WorkoutTemplate
-	@State private var completedSets: Set<String> = []
-	@State private var setValues: [String: SetValue] = [:]
-	@State private var isFinished = false
-
-	private var totalSets: Int { template.exercises.reduce(0) { $0 + $1.sets } }
-	private var canFinish: Bool { completedSets.count == totalSets && loggedSets.count == totalSets }
+	@State private var confirmingFinish = false
 
 	var body: some View {
 		NavigationStack {
 			List {
-				Section {
-					HStack {
-						Label(template.subtitle, systemImage: "figure.strengthtraining.traditional")
-						Spacer()
-						Text("\(completedSets.count) / \(totalSets) sets")
-							.monospacedDigit()
-							.foregroundStyle(.secondary)
-					}
-				}
-
-				ForEach(template.exercises) { exercise in
+				if let draft = store.activeWorkout {
 					Section {
-						if let previous = store.lastPerformance(for: exercise.name) {
-							Text("Last: \(previous.weightKilograms, format: .number.precision(.fractionLength(1))) kg × \(previous.repetitions) · \(previous.rir, format: .number.precision(.fractionLength(0))) RIR")
-								.font(.footnote)
-								.foregroundStyle(.secondary)
-						}
-
-						ForEach(1...exercise.sets, id: \.self) { number in
-							let id = setID(for: exercise, number: number)
-							SetRow(number: number, target: exercise.reps, rirTarget: exercise.rirTarget, value: binding(for: id, exercise: exercise), isComplete: completedSets.contains(id)) {
-								toggleSet(id)
+						LabeledContent("Completed", value: "\(draft.completedSetCount) / \(draft.sets.count) sets")
+					} footer: {
+						Text("Saved automatically. Close and resume whenever you like.")
+					}
+					ForEach(draft.template.exercises) { exercise in
+						Section {
+							Text("\(exercise.reps) reps · \(exercise.rirTarget) RIR · \(exercise.restSeconds)s rest")
+								.font(.caption).foregroundStyle(.secondary)
+							if let previous = store.lastPerformance(for: exercise.name) {
+								Text("Last: \(previous.weightKilograms, format: .number.precision(.fractionLength(1))) kg × \(previous.repetitions) · \(previous.rir, format: .number) RIR")
+									.font(.caption).foregroundStyle(.secondary)
 							}
+							ForEach(draft.sets.filter { $0.id.hasPrefix("\(exercise.id)-") }) { set in
+								SetRow(value: binding(for: set))
+							}
+						} header: { Text(exercise.name) }
+					}
+					Section {
+						Button("Finish workout") {
+							if draft.completedSetCount < draft.sets.count || draft.loggedSets.count < draft.sets.count {
+								confirmingFinish = true
+							} else { finish() }
 						}
-					} header: {
-						Text(exercise.name)
+						.fontWeight(.semibold)
+						.frame(maxWidth: .infinity, minHeight: 44)
+					} footer: {
+						Text("You can finish with skipped sets or empty fields. Only what you entered is recorded.")
 					}
-				}
-
-				Section {
-					Button {
-						store.completeWorkout(templateID: template.id, sets: loggedSets)
-						isFinished = true
-					} label: {
-						Text("Finish workout")
-							.frame(maxWidth: .infinity)
-							.fontWeight(.bold)
-					}
-					.disabled(!canFinish)
-				} footer: {
-					Text("Complete every set with kg, reps, and RIR. No invented calories burned.")
 				}
 			}
-			.navigationTitle(template.title)
+			.navigationTitle(store.activeWorkout?.template.title ?? template.title)
 			.navigationBarTitleDisplayMode(.inline)
+			.scrollDismissesKeyboard(.interactively)
 			.toolbar {
-				ToolbarItem(placement: .cancellationAction) {
-					Button("Close") { dismiss() }
-				}
+				ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
 			}
-			.alert("Workout logged", isPresented: $isFinished) {
-				Button("Nice") { dismiss() }
+			.onAppear { store.beginWorkout(template) }
+			.alert("Finish this session?", isPresented: $confirmingFinish) {
+				Button("Keep training", role: .cancel) {}
+				Button("Finish workout") { finish() }
 			} message: {
-				Text("Next session: \(store.nextWorkout.title).")
+				Text("All entries and checkmarks will be kept. Unchecked sets stay skipped; missing numbers stay empty.")
 			}
 		}
 	}
 
-	private var loggedSets: [LoggedSet] {
-		template.exercises.flatMap { exercise in
-			(1...exercise.sets).compactMap { number in
-				let id = setID(for: exercise, number: number)
-				guard completedSets.contains(id), let value = setValues[id], let weight = Double(value.weight.replacingOccurrences(of: ",", with: ".")), let reps = Int(value.reps), let rir = Double(value.rir.replacingOccurrences(of: ",", with: ".")) else { return nil }
-				return LoggedSet(exerciseName: exercise.name, setNumber: number, weightKilograms: weight, repetitions: reps, rir: rir)
-			}
-		}
+	private func binding(for set: WorkoutSetDraft) -> Binding<WorkoutSetDraft> {
+		Binding(get: { store.activeWorkout?.sets.first { $0.id == set.id } ?? set }, set: { store.updateWorkoutSet($0) })
 	}
 
-	private func setID(for exercise: Exercise, number: Int) -> String { "\(exercise.id)-\(number)" }
-
-	private func binding(for id: String, exercise: Exercise) -> Binding<SetValue> {
-		Binding(
-			get: {
-				if let value = setValues[id] { return value }
-				let previous = store.lastPerformance(for: exercise.name)
-				return SetValue(
-					weight: previous.map { String(format: "%.1f", $0.weightKilograms) } ?? "",
-					reps: previous.map { String($0.repetitions) } ?? "",
-					rir: previous.map { String(format: "%.0f", $0.rir) } ?? exercise.rirTarget.components(separatedBy: "–").first ?? ""
-				)
-			},
-			set: { setValues[id] = $0 }
-		)
+	private func finish() {
+		store.finishWorkout()
+		dismiss()
 	}
-
-	private func toggleSet(_ id: String) {
-		if completedSets.contains(id) { completedSets.remove(id) }
-		else { completedSets.insert(id) }
-	}
-}
-
-private struct SetValue: Equatable {
-	var weight: String
-	var reps: String
-	var rir: String
 }
 
 private struct SetRow: View {
-	let number: Int
-	let target: String
-	let rirTarget: String
-	@Binding var value: SetValue
-	let isComplete: Bool
-	let toggle: () -> Void
+	@Binding var value: WorkoutSetDraft
 
 	var body: some View {
-		HStack(spacing: 8) {
-			Button(action: toggle) {
-				Image(systemName: isComplete ? "checkmark.circle.fill" : "circle")
-					.foregroundStyle(isComplete ? .green : .secondary)
+		HStack(spacing: 12) {
+			Button { value.isComplete.toggle() } label: {
+				Image(systemName: value.isComplete ? "checkmark.circle.fill" : "circle")
+					.font(.title3)
+					.foregroundStyle(value.isComplete ? .green : .secondary)
+					.frame(width: 44, height: 44)
 			}
 			.buttonStyle(.plain)
-			Text("\(number)").frame(width: 14, alignment: .leading)
-			TextField("kg", text: $value.weight)
-				.keyboardType(.decimalPad)
-				.multilineTextAlignment(.trailing)
-				.frame(maxWidth: 58)
-			Text("×").foregroundStyle(.secondary)
-			TextField("reps", text: $value.reps)
-				.keyboardType(.numberPad)
-				.multilineTextAlignment(.trailing)
-				.frame(maxWidth: 42)
-			TextField("RIR", text: $value.rir)
-				.keyboardType(.decimalPad)
-				.multilineTextAlignment(.trailing)
-				.frame(maxWidth: 40)
-			Spacer(minLength: 0)
-			Text("\(target) · \(rirTarget)")
-				.font(.caption2)
-				.foregroundStyle(.secondary)
+			.accessibilityLabel("Set \(value.setNumber), \(value.isComplete ? "completed" : "not completed")")
+			Text("\(value.setNumber)").font(.caption).foregroundStyle(.secondary)
+			input("kg", text: $value.weight, keyboard: .decimalPad)
+			input("reps", text: $value.reps, keyboard: .numberPad)
+			input("RIR", text: $value.rir, keyboard: .decimalPad)
 		}
+	}
+
+	private func input(_ unit: String, text: Binding<String>, keyboard: UIKeyboardType) -> some View {
+		VStack(alignment: .trailing, spacing: 2) {
+			Text(unit).font(.caption2).foregroundStyle(.secondary)
+			TextField("—", text: text)
+				.keyboardType(keyboard)
+				.multilineTextAlignment(.trailing)
+				.monospacedDigit()
+				.accessibilityLabel("\(value.exerciseName), set \(value.setNumber), \(unit)")
+		}
+		.frame(maxWidth: .infinity)
 	}
 }

@@ -2,7 +2,11 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.scenePhase) private var scenePhase
     @State private var healthError: String?
+    @State private var isConnecting = false
+    @State private var healthStatus: String?
+    @State private var exerciseDBAPIKey = ""
 
     var body: some View {
         @Bindable var store = store
@@ -22,18 +26,20 @@ struct SettingsView: View {
                     Button(action: connectHealth) {
                         HStack {
                             Label(
-                                store.settings.healthSyncEnabled ? "Health connected" : "Connect Apple Health",
-                                systemImage: store.settings.healthSyncEnabled ? "checkmark.circle.fill" : "heart.fill"
+                                isConnecting ? "Requesting access…" : (store.settings.healthSyncEnabled ? "Review Health access" : "Connect Apple Health"),
+                                systemImage: "heart.fill"
                             )
-                            .foregroundStyle(store.settings.healthSyncEnabled ? .green : .primary)
+                            .foregroundStyle(.primary)
                             Spacer()
-                            if !store.settings.healthSyncEnabled {
+                            if isConnecting {
+                                ProgressView()
+                            } else if !store.settings.healthSyncEnabled {
                                 Text("Allow")
                                     .foregroundStyle(.secondary)
                             }
                         }
                     }
-                    .disabled(store.settings.healthSyncEnabled)
+                    .disabled(isConnecting)
 
                     if store.settings.healthSyncEnabled {
                         Button("Stop syncing", role: .destructive) {
@@ -41,7 +47,23 @@ struct SettingsView: View {
                         }
                     }
 
-                    Text("Tap Connect Apple Health to choose permissions. New food, weight and strength workouts sync after you allow them; existing local history stays local.")
+                    if let healthStatus, store.settings.healthSyncEnabled {
+                        Text(healthStatus).font(.footnote).foregroundStyle(.secondary)
+                    }
+                    if let syncError = store.healthSyncError {
+                        Label(syncError, systemImage: "exclamationmark.triangle")
+                            .font(.footnote).foregroundStyle(.orange)
+                    }
+                    Text("Sync is optional and only uses the types you allow. To change a previous choice: Health → profile → Apps → Cut. iOS may not ask again. Existing food and workout history is not uploaded; local deletions do not delete Health records.")
+                        .foregroundStyle(.secondary)
+                }
+                Section("Exercise tutorials") {
+                    SecureField("RapidAPI key", text: $exerciseDBAPIKey)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .onChange(of: exerciseDBAPIKey) { _, key in KeychainStore.setExerciseDBKey(key) }
+                    Text("Used only when you open an exercise tutorial. The key stays in your iPhone Keychain and is sent to ExerciseDB through RapidAPI, never bundled in the app.")
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
                 Section("AI meal estimate") {
@@ -49,11 +71,18 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 Section("Privacy") {
-                    Text("No account, ads or server. Food, weight, goals and workouts stay in local app storage. Barcode lookup sends only the scanned product code to Open Food Facts.")
+                    Text("No account, ads or backend. Food, weight, goals and workouts stay in local app storage. Barcode lookup sends only the scanned product code to Open Food Facts. Exercise tutorials use your optional RapidAPI key only when opened.")
                         .foregroundStyle(.secondary)
                 }
             }
             .navigationTitle("Settings")
+            .task {
+                exerciseDBAPIKey = KeychainStore.exerciseDBKey()
+                await refreshHealthStatus()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { Task { await refreshHealthStatus() } }
+            }
             .alert("Health not connected", isPresented: Binding(get: { healthError != nil }, set: { if !$0 { healthError = nil } })) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -63,14 +92,24 @@ struct SettingsView: View {
     }
 
     private func connectHealth() {
+        guard !isConnecting else { return }
+        isConnecting = true
         Task {
-            let granted = await HealthKitStore.shared.requestAuthorization()
-            if granted {
+            defer { isConnecting = false }
+            do {
+                let access = try await HealthKitStore.shared.requestAuthorization()
+                healthStatus = access.summary
                 store.settings.healthSyncEnabled = true
+                store.healthSyncError = nil
                 await store.importLatestHealthWeight()
-            } else {
-                healthError = "Health access was not enabled. CutLog still works normally."
+            } catch {
+                healthError = HealthKitStore.message(for: error)
             }
         }
+    }
+
+    private func refreshHealthStatus() async {
+        guard store.settings.healthSyncEnabled else { return }
+        healthStatus = await HealthKitStore.shared.currentAccess().summary
     }
 }

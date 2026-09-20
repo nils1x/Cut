@@ -1,11 +1,13 @@
 import SwiftUI
+import Charts
 
 struct TodayView: View {
     @Environment(AppStore.self) private var store
-    @State private var showingFoodSheet = false
+    @State private var foodRoute: AddFoodView.StartMode?
     @State private var showingWorkout = false
     @State private var showingWeight = false
-    @State private var foodStartMode: AddFoodView.StartMode = .manual
+    @State private var weightRange = 90
+    @ScaledMetric(relativeTo: .largeTitle) private var calorieFontSize = 48
 
     private var totals: DailyTotals { store.todayTotals }
     private var caloriesLeft: Int { store.settings.calorieGoal - totals.calories }
@@ -18,47 +20,39 @@ struct TodayView: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("\(max(0, caloriesLeft))")
-                            .font(.system(size: 72, weight: .bold, design: .rounded))
-                            .contentTransition(.numericText())
-                        Text(caloriesLeft >= 0 ? "kcal left" : "kcal over — log it anyway")
-                            .font(.headline)
-                            .foregroundStyle(caloriesLeft >= 0 ? Color.secondary : Color.orange)
-                        ProgressView(value: Double(totals.calories), total: Double(store.settings.calorieGoal))
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(abs(caloriesLeft), format: .number)
+                                .font(.system(size: calorieFontSize, weight: .bold, design: .rounded))
+                                .monospacedDigit().contentTransition(.numericText())
+                                .lineLimit(1).minimumScaleFactor(0.7)
+                            Text(caloriesLeft >= 0 ? "kcal left" : "kcal over")
+                                .font(.subheadline).foregroundStyle(.secondary)
+                        }
+                        ProgressView(value: min(1, max(0, Double(totals.calories) / Double(max(1, store.settings.calorieGoal)))))
                             .tint(.orange)
+                        LabeledContent("Protein", value: "\(totals.protein) / \(store.settings.proteinGoal) g")
+                            .font(.subheadline).monospacedDigit()
+                        Divider()
+                        WeightSummary(latestWeight: store.latestWeight,
+                                      trend: store.weightTrend(days: weightRange == 0 ? nil : weightRange),
+                                      range: $weightRange) { showingWeight = true }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(24)
-                    .background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-
-                    HStack(spacing: 12) {
-                        MetricCard(
-                            title: "Protein",
-                            value: "\(totals.protein) / \(store.settings.proteinGoal)g",
-                            progress: Double(totals.protein) / Double(store.settings.proteinGoal),
-                            tint: .mint
-                        )
-                        Button { showingWeight = true } label: {
-                            WeightMetricCard(latestWeight: store.latestWeight?.kilograms, trend: store.sevenDayWeightTrend)
-                        }
-                        .buttonStyle(.plain)
-                    }
+                    .padding(20)
+                    .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
 
                     Button { showingWorkout = true } label: {
-                        WorkoutStatusCard(template: store.nextWorkout, isDue: store.workoutIsDue)
+                        WorkoutStatusCard(template: store.nextWorkout, isDue: store.workoutIsDue, isResuming: store.activeWorkout != nil, didTrainToday: store.workouts.contains { Calendar.current.isDateInToday($0.completedAt) })
                     }
                     .buttonStyle(.plain)
 
-                    FoodActionsCard { mode in
-                        foodStartMode = mode
-                        showingFoodSheet = true
-                    }
+                    FoodActionsCard { foodRoute = $0 }
 
-                    if !store.recentFoods.isEmpty {
+                    if !store.quickLogFoods.isEmpty {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
-                                ForEach(store.recentFoods.prefix(4)) { food in
+                                ForEach(store.quickLogFoods.prefix(4)) { food in
                                     Button {
                                         store.addFood(FoodEntry(
                                             name: food.name,
@@ -101,13 +95,20 @@ struct TodayView: View {
                         }
                     }
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding(.bottom)
             }
             .navigationTitle("Cut.")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Cut.").font(.headline.weight(.bold))
+                }
+            }
             .task(id: store.workouts.count) {
                 await WorkoutReminder.refresh(isDue: store.workoutIsDue, enabled: store.settings.reminderEnabled)
             }
-            .sheet(isPresented: $showingFoodSheet) { AddFoodView(startMode: foodStartMode) }
+            .sheet(item: $foodRoute) { mode in AddFoodView(startMode: mode) }
             .sheet(isPresented: $showingWorkout) { WorkoutView(template: store.nextWorkout) }
             .sheet(isPresented: $showingWeight) { AddWeightView() }
         }
@@ -164,45 +165,75 @@ private struct FoodActionButton: View {
     }
 }
 
-private struct MetricCard: View {
-    let title: String
-    let value: String
-    let progress: Double?
-    let tint: Color
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: "bolt.fill")
-                .foregroundStyle(tint)
-            Text(value).font(.headline)
-            Text(title).font(.caption).foregroundStyle(.secondary)
-            if let progress { ProgressView(value: min(progress, 1)).tint(tint) }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-    }
-}
-
-private struct WeightMetricCard: View {
-    let latestWeight: Double?
+private struct WeightSummary: View {
+    let latestWeight: WeightEntry?
     let trend: [WeightTrendPoint]
+    @Binding var range: Int
+    let addWeight: () -> Void
+
+    private var rangeTitle: String { range == 0 ? "All time" : "\(range) days" }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: "scalemass.fill")
-                .foregroundStyle(.indigo)
-            Text(trend.last.map { String(format: "%.1f kg", $0.kilograms) } ?? latestWeight.map { String(format: "%.1f kg", $0) } ?? "Log it")
-                .font(.headline)
-            Text(trend.isEmpty ? "Weight" : "7-day average")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            WeightSparkline(points: trend)
-                .frame(height: 18)
+            HStack {
+                Button(action: addWeight) {
+                    HStack(spacing: 6) {
+                        Text("Weight").foregroundStyle(.secondary)
+                        if let latestWeight {
+                            Text("\(latestWeight.kilograms, format: .number.precision(.fractionLength(1))) kg")
+                                .fontWeight(.semibold).foregroundStyle(.primary)
+                        }
+                        Image(systemName: "plus.circle").foregroundStyle(.orange)
+                    }
+                    .font(.subheadline)
+                    .frame(minHeight: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Add a weigh-in")
+                Spacer(minLength: 4)
+                Menu {
+                    Picker("Weight history", selection: $range) {
+                        Text("30 days").tag(30)
+                        Text("90 days").tag(90)
+                        Text("All time").tag(0)
+                    }
+                } label: {
+                    Label(rangeTitle, systemImage: "chevron.down")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .frame(minHeight: 44)
+                }
+            }
+            if let first = trend.first, let last = trend.last {
+                if trend.count > 1 {
+                    HStack {
+                        Text("\(last.kilograms - first.kilograms, format: .number.sign(strategy: .always()).precision(.fractionLength(1))) kg")
+                            .fontWeight(.medium)
+                        Text("trend change").foregroundStyle(.secondary)
+                        Spacer()
+                        Text("7-day smoothing").foregroundStyle(.secondary)
+                    }
+                    .font(.caption)
+                    WeightSparkline(points: trend)
+                        .frame(height: 44)
+                    HStack {
+                        Text(first.date, format: .dateTime.month(.abbreviated).day())
+                        Spacer()
+                        Text(last.date, format: .dateTime.month(.abbreviated).day())
+                    }
+                    .font(.caption2).foregroundStyle(.secondary)
+                } else {
+                    Text("One weigh-in. Your trend starts with the next.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            } else {
+                Text(latestWeight == nil ? "Add a weigh-in to start your trend." : "No weigh-ins in this range. Try All time.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            if let latestWeight, !Calendar.current.isDateInToday(latestWeight.date) {
+                Text("Last weighed \(latestWeight.date.formatted(.dateTime.month(.abbreviated).day()))")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }
 
@@ -210,46 +241,41 @@ private struct WeightSparkline: View {
     let points: [WeightTrendPoint]
 
     var body: some View {
-        GeometryReader { proxy in
-            if points.count > 1 {
-                let values = points.map(\.kilograms)
-                let low = values.min() ?? 0
-                let high = values.max() ?? low
-                let range = max(high - low, 0.1)
-                Path { path in
-                    for (index, value) in values.enumerated() {
-                        let x = proxy.size.width * CGFloat(index) / CGFloat(values.count - 1)
-                        let y = proxy.size.height * (1 - CGFloat((value - low) / range))
-                        if index == 0 { path.move(to: CGPoint(x: x, y: y)) }
-                        else { path.addLine(to: CGPoint(x: x, y: y)) }
-                    }
-                }
-                .stroke(.indigo, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-            } else {
-                Capsule().fill(.secondary.opacity(0.15))
-            }
+        let low = points.map(\.kilograms).min() ?? 0
+        let high = points.map(\.kilograms).max() ?? low
+        // At least 1 kg of vertical range: don't dramatize tiny daily noise.
+        let padding = max(0.15, (1 - (high - low)) / 2)
+        Chart(points) { point in
+            LineMark(x: .value("Date", point.date), y: .value("7-day average", point.kilograms))
+                .foregroundStyle(.primary.opacity(0.75))
+                .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
         }
+        .chartYScale(domain: (low - padding)...(high + padding))
+        .chartXAxis(.hidden).chartYAxis(.hidden).chartLegend(.hidden)
+        .accessibilityLabel("Weight trend, rolling seven-day average of available weigh-ins")
     }
 }
 
 private struct WorkoutStatusCard: View {
     let template: WorkoutTemplate
     let isDue: Bool
+    let isResuming: Bool
+    let didTrainToday: Bool
 
     var body: some View {
         HStack(spacing: 16) {
-            Image(systemName: isDue ? "figure.strengthtraining.traditional" : "checkmark.circle.fill")
+            Image(systemName: isResuming ? "play.fill" : (didTrainToday ? "checkmark.circle.fill" : "figure.strengthtraining.traditional"))
                 .font(.title2)
                 .foregroundStyle(isDue ? .orange : .green)
                 .frame(width: 42, height: 42)
                 .background((isDue ? Color.orange : .green).opacity(0.14), in: Circle())
             VStack(alignment: .leading, spacing: 3) {
-                Text(isDue ? "Training due" : "Training done")
+                Text(isResuming ? "Resume training" : (isDue ? "Training today" : (didTrainToday ? "Training saved" : "Recovery day")))
                     .font(.caption.weight(.bold))
                     .foregroundStyle(isDue ? .orange : .green)
-                Text(isDue ? template.title : "Good. Recover.")
+                Text(template.title)
                     .font(.headline)
-                Text(isDue ? template.subtitle : "Next: \(template.title)")
+                Text(isResuming ? "Your sets are saved" : (isDue ? template.subtitle : "Next session"))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }

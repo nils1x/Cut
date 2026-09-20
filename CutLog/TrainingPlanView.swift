@@ -1,3 +1,4 @@
+import AVKit
 import SwiftUI
 
 struct TrainingPlanView: View {
@@ -7,11 +8,11 @@ struct TrainingPlanView: View {
 	@State private var showingPlanEditor = false
 
 	private var nextScheduled: (workout: ScheduledWorkout, date: Date) {
-		WorkoutSchedule.nextScheduledWorkout()
+		store.nextScheduledWorkout
 	}
 
 	private var nextTemplate: WorkoutTemplate {
-		store.template(for: nextScheduled.workout.templateID) ?? store.nextWorkout
+		store.nextWorkout
 	}
 
 	var body: some View {
@@ -19,7 +20,7 @@ struct TrainingPlanView: View {
 			ScrollView {
 				VStack(alignment: .leading, spacing: 16) {
 					Button { showingWorkout = true } label: {
-						NextWorkoutCard(template: nextTemplate, date: nextScheduled.date, isDue: store.workoutIsDue)
+						NextWorkoutCard(template: nextTemplate, date: nextScheduled.date, isDue: store.workoutIsDue, isResuming: store.activeWorkout != nil)
 					}
 					.buttonStyle(.plain)
 
@@ -65,11 +66,12 @@ private struct NextWorkoutCard: View {
 	let template: WorkoutTemplate
 	let date: Date
 	let isDue: Bool
+	let isResuming: Bool
 
 	var body: some View {
 		VStack(alignment: .leading, spacing: 12) {
 			HStack {
-				Label(isDue ? "Today" : date.formatted(.dateTime.weekday(.wide)), systemImage: "figure.strengthtraining.traditional")
+				Label(isResuming ? "Resume session" : (isDue ? "Today" : date.formatted(.dateTime.weekday(.wide))), systemImage: "figure.strengthtraining.traditional")
 					.font(.subheadline.weight(.semibold))
 					.foregroundStyle(.orange)
 				Spacer()
@@ -183,6 +185,10 @@ private struct WorkoutDetailView: View {
 private struct ExerciseDetailView: View {
 	@Environment(\.dismiss) private var dismiss
 	let exercise: Exercise
+	@State private var tutorial: ExerciseDBExercise?
+	@State private var tutorialError: String?
+	@State private var isLoadingTutorial = false
+	@State private var showingVideo = false
 
 	var body: some View {
 		NavigationStack {
@@ -198,8 +204,18 @@ private struct ExerciseDetailView: View {
 						Pill("RIR \(exercise.rirTarget)", "gauge.with.dots.needle.50percent")
 						Pill("\(exercise.restSeconds)s", "timer")
 					}
+
+					TutorialSection(
+						tutorial: tutorial,
+						error: tutorialError,
+						isLoading: isLoadingTutorial,
+						onLoad: loadTutorial,
+						onPlay: { showingVideo = true }
+					)
+
 					DetailSection(title: "Purpose", text: exercise.purpose)
 					DetailSection(title: "Cue", text: exercise.howTo)
+					DetailSection(title: "Mat-only alternative", text: exercise.matAlternative.isEmpty ? "No mat-only alternative added yet." : exercise.matAlternative)
 					DetailSection(title: "Progress", text: exercise.progressionNote)
 					if !exercise.alternatives.isEmpty {
 						DetailSection(title: "If it is taken", text: exercise.alternatives.joined(separator: " · "))
@@ -210,6 +226,110 @@ private struct ExerciseDetailView: View {
 			.navigationTitle("Exercise")
 			.navigationBarTitleDisplayMode(.inline)
 			.toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
+			.sheet(isPresented: $showingVideo) {
+				if let url = tutorial?.videoURL {
+					TutorialVideoView(url: url)
+				}
+			}
+		}
+	}
+
+	private func loadTutorial() {
+		guard !isLoadingTutorial else { return }
+		isLoadingTutorial = true
+		tutorialError = nil
+		Task {
+			do {
+				let result = try await ExerciseDBService.shared.tutorial(
+					for: exercise.exerciseDBQuery.isEmpty ? exercise.name : exercise.exerciseDBQuery,
+					apiKey: KeychainStore.exerciseDBKey()
+				)
+				await MainActor.run {
+					tutorial = result
+					isLoadingTutorial = false
+				}
+			} catch {
+				await MainActor.run {
+					tutorialError = error.localizedDescription
+					isLoadingTutorial = false
+				}
+			}
+		}
+	}
+}
+
+private struct TutorialSection: View {
+	let tutorial: ExerciseDBExercise?
+	let error: String?
+	let isLoading: Bool
+	let onLoad: () -> Void
+	let onPlay: () -> Void
+
+	var body: some View {
+		VStack(alignment: .leading, spacing: 10) {
+			Text("Tutorial").font(.headline)
+			if let tutorial {
+				if let imageURL = tutorial.preferredImageURL {
+					AsyncImage(url: imageURL) { phase in
+						switch phase {
+						case .success(let image):
+							image.resizable().scaledToFill()
+						default:
+							RoundedRectangle(cornerRadius: 16, style: .continuous)
+								.fill(.secondary.opacity(0.1))
+								.overlay { ProgressView() }
+						}
+					}
+					.frame(height: 210)
+					.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+				}
+				if !tutorial.targetMuscles.isEmpty {
+					DetailSection(title: "Targets", text: tutorial.targetMuscles.map { $0.capitalized }.joined(separator: " · "))
+				}
+				if let overview = tutorial.overview, !overview.isEmpty {
+					DetailSection(title: "About", text: overview)
+				}
+				if !tutorial.instructions.isEmpty {
+					VStack(alignment: .leading, spacing: 7) {
+						Text("How to do it").font(.headline)
+						ForEach(Array(tutorial.instructions.enumerated()), id: \.offset) { index, instruction in
+							Label(instruction, systemImage: "\(index + 1).circle.fill")
+									.font(.subheadline)
+									.foregroundStyle(.secondary)
+						}
+					}
+				}
+				if tutorial.videoURL != nil {
+					Button(action: onPlay) {
+						Label("Watch form video", systemImage: "play.rectangle.fill")
+							.frame(maxWidth: .infinity)
+					}
+					.buttonStyle(.borderedProminent)
+				}
+			} else if isLoading {
+				HStack(spacing: 10) { ProgressView(); Text("Loading ExerciseDB tutorial…").foregroundStyle(.secondary) }
+			} else {
+				Text(error ?? "Load a photo, form cues, and a video tutorial on demand.")
+					.font(.subheadline)
+					.foregroundStyle(error == nil ? Color.secondary : Color.red)
+				Button("Load tutorial", action: onLoad).buttonStyle(.bordered)
+			}
+		}
+		.padding(16)
+		.background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+	}
+}
+
+private struct TutorialVideoView: View {
+	@Environment(\.dismiss) private var dismiss
+	let url: URL
+
+	var body: some View {
+		NavigationStack {
+			VideoPlayer(player: AVPlayer(url: url))
+				.navigationTitle("Form video")
+				.navigationBarTitleDisplayMode(.inline)
+				.toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
 		}
 	}
 }

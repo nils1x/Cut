@@ -22,6 +22,7 @@
 		7295EB02EFF3AE47C09370D8 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E509DAF6995A7BD4338371 /* HistoryView.swift */; };
 		7B0FD48DB24EEE321CC9920C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E164BF41376D4B57908CF683 /* SettingsView.swift */; };
 		7CDEC74F87C7E914CA112D4A /* CutLogApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFECDAE37723D950461C0691 /* CutLogApp.swift */; };
+		865CC5F29C75EB9BBFE241C7 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E71D8AEF5D04D3DEBFDD101 /* KeychainStore.swift */; };
 		93F68C79E91848A82A37411A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E72A27965B1B2BC51DBAA3EE /* Assets.xcassets */; };
 		9A9AD0682DBD30BF88E72C90 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914A17D2D0EE78F2A9B20A97 /* RootView.swift */; };
 		B2C7A5C45554A4BA4C656006 /* CutLogWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358FEDB859AF3497E2213812 /* CutLogWidgetData.swift */; };
@@ -31,6 +32,7 @@
 		C65D58C383DBEE0CC95AB7E1 /* HealthKitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C59FD45B248704CE1AA1564 /* HealthKitStore.swift */; };
 		D0109B0C6D1289DDFF3709E2 /* TrainingPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A6FA662302A5F2936F7136 /* TrainingPlanView.swift */; };
 		E026BD93ECF6CD9482C3BE1D /* AddWeightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361E22463CCD6732B954E2BF /* AddWeightView.swift */; };
+		ED18A6F29D3319E36A7C012C /* ExerciseDBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0DC1C25D02658CB53F744D2 /* ExerciseDBService.swift */; };
 		FBDCEBCD322E8D606B2428BF /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F7A5E2ABB23EC944C253C1 /* TodayView.swift */; };
 		FD3A62D0A882B90F77754E77 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D4BF39075F6C57DDD4DFCE9 /* WidgetSnapshot.swift */; };
 /* End PBXBuildFile section */
@@ -82,9 +84,11 @@
 		6AAF1ED0088324FE105EE0E1 /* CutLogTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = CutLogTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7F91A3D51FFAAAAD2908F5CF /* CutLog.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CutLog.entitlements; sourceTree = "<group>"; };
 		829C57556046EF9878780275 /* WorkoutReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutReminder.swift; sourceTree = "<group>"; };
+		8E71D8AEF5D04D3DEBFDD101 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		914A17D2D0EE78F2A9B20A97 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		9627D1858B24AACD52E1A051 /* CutLogWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CutLogWidget.entitlements; sourceTree = "<group>"; };
 		9DF2D3F2A6C6388A282D1149 /* CutLogWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CutLogWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0DC1C25D02658CB53F744D2 /* ExerciseDBService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseDBService.swift; sourceTree = "<group>"; };
 		A18D64CDCCAFDD31C940C659 /* MealEstimateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealEstimateService.swift; sourceTree = "<group>"; };
 		AA9671F2AAA6349982D33E41 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		AFECDAE37723D950461C0691 /* CutLogApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutLogApp.swift; sourceTree = "<group>"; };
@@ -122,8 +126,10 @@
 				51835279B7C9238707C83F0D /* CameraPicker.swift */,
 				7F91A3D51FFAAAAD2908F5CF /* CutLog.entitlements */,
 				AFECDAE37723D950461C0691 /* CutLogApp.swift */,
+				A0DC1C25D02658CB53F744D2 /* ExerciseDBService.swift */,
 				0C59FD45B248704CE1AA1564 /* HealthKitStore.swift */,
 				E2E509DAF6995A7BD4338371 /* HistoryView.swift */,
+				8E71D8AEF5D04D3DEBFDD101 /* KeychainStore.swift */,
 				A18D64CDCCAFDD31C940C659 /* MealEstimateService.swift */,
 				3921769E72357CC787AC34CD /* Models.swift */,
 				914A17D2D0EE78F2A9B20A97 /* RootView.swift */,
@@ -267,6 +273,10 @@
 					A63A414B3AF0E73A30BDF3B9 = {
 						ProvisioningStyle = Automatic;
 					};
+					F8573A5812A4BB07D4D5C808 = {
+						DevelopmentTeam = 69X37B2BSP;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 37C7FEE6E3E8FA78F0E6D650 /* Build configuration list for PBXProject "CutLog" */;
@@ -332,8 +342,10 @@
 				360AFA616726E68790F3B03E /* CameraPicker.swift in Sources */,
 				7CDEC74F87C7E914CA112D4A /* CutLogApp.swift in Sources */,
 				06AC767B161545ED821C903B /* CutLogWidgetData.swift in Sources */,
+				ED18A6F29D3319E36A7C012C /* ExerciseDBService.swift in Sources */,
 				C65D58C383DBEE0CC95AB7E1 /* HealthKitStore.swift in Sources */,
 				7295EB02EFF3AE47C09370D8 /* HistoryView.swift in Sources */,
+				865CC5F29C75EB9BBFE241C7 /* KeychainStore.swift in Sources */,
 				327B6034C00CD0985BA49D0F /* MealEstimateService.swift in Sources */,
 				C30290F206B826BD16F53DDB /* Models.swift in Sources */,
 				9A9AD0682DBD30BF88E72C90 /* RootView.swift in Sources */,
@@ -484,6 +496,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 69X37B2BSP;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -585,6 +599,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 69X37B2BSP;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
