@@ -1,5 +1,66 @@
 import SwiftUI
 
+struct WorkoutLaunchView: View {
+	@Environment(AppStore.self) private var store
+	@Environment(\.dismiss) private var dismiss
+	@State private var selectedTemplate: WorkoutTemplate?
+
+	var body: some View {
+		NavigationStack {
+			ScrollView {
+				VStack(alignment: .leading, spacing: 20) {
+					if !store.unfinishedWorkouts.isEmpty {
+						Text("Continue a saved session or start the scheduled one. Nothing gets deleted.")
+							.font(.subheadline).foregroundStyle(.secondary)
+						ForEach(store.unfinishedWorkouts) { draft in
+							Button {
+								store.resumeWorkout(draft.id)
+								selectedTemplate = store.activeWorkout?.template
+							} label: {
+								choice(title: "Continue · \(draft.startedAt.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))", template: draft.template,
+									footer: "\(draft.completedSetCount) of \(draft.sets.count) sets checked", symbol: "arrow.counterclockwise")
+							}
+							.buttonStyle(.plain)
+						}
+					}
+					Button {
+						let scheduled = store.launchWorkout
+						store.startScheduledWorkout(scheduled.template)
+						selectedTemplate = scheduled.template
+					} label: {
+						choice(title: Calendar.current.isDateInToday(store.launchWorkout.date) ? "Start today's workout" : "Start next plan early · \(store.launchWorkout.date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day()))",
+							template: store.launchWorkout.template, footer: "Starts a new session today if none is saved for today", symbol: "play.fill")
+					}
+					.buttonStyle(.plain)
+				}
+				.padding()
+			}
+			.navigationTitle("Choose workout")
+			.navigationBarTitleDisplayMode(.inline)
+			.toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
+			.sheet(item: $selectedTemplate, onDismiss: { dismiss() }) { WorkoutView(template: $0) }
+		}
+	}
+
+	private func choice(title: String, template: WorkoutTemplate, footer: String, symbol: String) -> some View {
+		HStack(alignment: .top, spacing: 12) {
+			Image(systemName: symbol).foregroundStyle(CutLogStyle.accent).frame(width: 24)
+			VStack(alignment: .leading, spacing: 6) {
+				Text(title).font(.caption.weight(.semibold)).foregroundStyle(CutLogStyle.accent)
+				Text(template.title).font(.headline).foregroundStyle(.primary)
+				Text(template.subtitle).font(.subheadline).foregroundStyle(.secondary)
+				Text(footer).font(.caption).foregroundStyle(.secondary)
+			}
+			Spacer(minLength: 0)
+			Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+		}
+		.frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
+		.padding(16)
+		.background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+		.contentShape(Rectangle())
+	}
+}
+
 struct WorkoutView: View {
 	@Environment(AppStore.self) private var store
 	@Environment(\.dismiss) private var dismiss

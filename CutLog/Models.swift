@@ -368,7 +368,10 @@ enum WorkoutSchedule {
 	}
 
 	static func isDue(workouts: [WorkoutEntry], now: Date = .now, calendar: Calendar = .current) -> Bool {
-		guard scheduledWorkout(on: now, calendar: calendar) != nil else { return false }
-		return !workouts.contains { calendar.isDate($0.completedAt, inSameDayAs: now) }
+		guard let scheduled = scheduledWorkout(on: now, calendar: calendar) else { return false }
+		return !workouts.contains { workout in
+			workout.templateID == scheduled.templateID
+					&& calendar.isDate(workout.startedAt ?? workout.completedAt, inSameDayAs: now)
+		}
 	}
 }

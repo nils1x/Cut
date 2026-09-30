@@ -23,6 +23,93 @@ final class CutLogTests: XCTestCase {
 		XCTAssertFalse(WorkoutSchedule.isDue(workouts: [WorkoutEntry(templateID: "upper-a", completedAt: monday)], now: monday, calendar: calendar))
 	}
 
+	func testFinishingLastWeeksLowerBOnMondayDoesNotCompleteUpperA() throws {
+		var calendar = Calendar(identifier: .gregorian)
+		calendar.timeZone = TimeZone(identifier: "Europe/Berlin")!
+		let sunday = calendar.date(from: DateComponents(year: 2026, month: 9, day: 27, hour: 18))!
+		let monday = calendar.date(from: DateComponents(year: 2026, month: 9, day: 28, hour: 10))!
+		try withStore { _, defaults in
+			let draft = WorkoutDraft(template: .lowerB, startedAt: sunday)
+			defaults.set(try JSONEncoder().encode(draft), forKey: "active-workout-v1")
+			let reopened = AppStore(defaults: defaults)
+			let completed = try XCTUnwrap(reopened.finishWorkout())
+			XCTAssertEqual(completed.templateID, "lower-b")
+			XCTAssertEqual(completed.startedAt, sunday)
+			XCTAssertTrue(WorkoutSchedule.isDue(workouts: reopened.workouts, now: monday, calendar: calendar))
+			XCTAssertEqual(WorkoutSchedule.nextScheduledWorkout(from: monday, calendar: calendar).workout.templateID, "upper-a")
+		}
+	}
+
+	func testStartedSundayAndFinishedMondayCountsForSundayNotMonday() {
+		var calendar = Calendar(identifier: .gregorian)
+		calendar.timeZone = TimeZone(identifier: "Europe/Berlin")!
+		let sunday = calendar.date(from: DateComponents(year: 2026, month: 9, day: 27, hour: 23, minute: 55))!
+		let monday = calendar.date(from: DateComponents(year: 2026, month: 9, day: 28, hour: 0, minute: 15))!
+		let workout = WorkoutEntry(templateID: "lower-b", completedAt: monday, startedAt: sunday)
+		XCTAssertFalse(WorkoutSchedule.isDue(workouts: [workout], now: sunday, calendar: calendar))
+		XCTAssertTrue(WorkoutSchedule.isDue(workouts: [workout], now: monday, calendar: calendar))
+	}
+
+	func testAnotherWorkoutTodayDoesNotCompleteScheduledWorkout() {
+		var calendar = Calendar(identifier: .gregorian)
+		calendar.timeZone = TimeZone(identifier: "Europe/Berlin")!
+		let monday = calendar.date(from: DateComponents(year: 2026, month: 9, day: 28, hour: 10))!
+		XCTAssertTrue(WorkoutSchedule.isDue(workouts: [WorkoutEntry(templateID: "lower-b", completedAt: monday)], now: monday, calendar: calendar))
+		XCTAssertFalse(WorkoutSchedule.isDue(workouts: [WorkoutEntry(templateID: "upper-a", completedAt: monday)], now: monday, calendar: calendar))
+	}
+
+	func testChoosingTodayPreservesOldDraftAndCanResumeIt() throws {
+		try withStore { store, defaults in
+			store.beginWorkout(.lowerB)
+			var checked = try XCTUnwrap(store.activeWorkout?.sets.first)
+			checked.isComplete = true
+			store.updateWorkoutSet(checked)
+			let old = try XCTUnwrap(store.activeWorkout)
+			store.startScheduledWorkout(.upperA)
+			XCTAssertEqual(store.activeWorkout?.template.id, "upper-a")
+			XCTAssertEqual(store.pausedWorkouts, [old])
+			let reopened = AppStore(defaults: defaults)
+			XCTAssertEqual(reopened.pausedWorkouts, [old])
+			reopened.resumeWorkout(old.id)
+			XCTAssertEqual(reopened.activeWorkout, old)
+			XCTAssertEqual(reopened.pausedWorkouts.first?.template.id, "upper-a")
+			let finished = try XCTUnwrap(reopened.finishWorkout())
+			XCTAssertEqual(finished.templateID, "lower-b")
+			XCTAssertEqual(finished.completedSetCount, 1)
+			XCTAssertEqual(reopened.activeWorkout?.template.id, "upper-a")
+		}
+	}
+
+	func testInterruptedFinishRestoresPausedDraftWithoutDuplicatingHistory() throws {
+		try withStore { store, defaults in
+			store.beginWorkout(.lowerB)
+			let old = try XCTUnwrap(store.activeWorkout)
+			store.startScheduledWorkout(.upperA)
+			let today = try XCTUnwrap(store.activeWorkout)
+			let completed = WorkoutEntry(id: today.id, templateID: today.template.id, startedAt: today.startedAt)
+			store.workouts.append(completed)
+			let recovered = AppStore(defaults: defaults)
+			XCTAssertEqual(recovered.workouts, [completed])
+			XCTAssertEqual(recovered.unfinishedWorkouts, [old])
+			XCTAssertEqual(AppStore(defaults: defaults).unfinishedWorkouts, [old])
+		}
+	}
+
+	func testStartingSameTemplateOnNewDayDoesNotContinuePreviousWeeksDraft() throws {
+		var calendar = Calendar(identifier: .gregorian)
+		calendar.timeZone = TimeZone(identifier: "Europe/Berlin")!
+		let oldMonday = calendar.date(from: DateComponents(year: 2026, month: 9, day: 21, hour: 10))!
+		let newMonday = calendar.date(from: DateComponents(year: 2026, month: 9, day: 28, hour: 10))!
+		try withStore { _, defaults in
+			let draft = WorkoutDraft(template: .upperA, startedAt: oldMonday)
+			defaults.set(try JSONEncoder().encode(draft), forKey: "active-workout-v1")
+			let reopened = AppStore(defaults: defaults)
+			reopened.startScheduledWorkout(.upperA, on: newMonday, calendar: calendar)
+			XCTAssertNotEqual(reopened.activeWorkout?.id, draft.id)
+			XCTAssertEqual(reopened.pausedWorkouts, [draft])
+		}
+	}
+
 	func testTuesdayIsNotAGymDayAndNextSessionIsLowerA() {
 		var calendar = Calendar(identifier: .gregorian)
 		calendar.timeZone = TimeZone(identifier: "Europe/Berlin")!
@@ -292,6 +379,79 @@ final class CutLogTests: XCTestCase {
 			XCTAssertEqual(bench.exerciseDBQuery, "bench press")
 			XCTAssertNotNil(upgraded.exercises.first { $0.name == "Dead Bug" })
 		}
+	}
+
+	func testLoggingStreakCountsOneCalendarDayOnceAndAllowsLoggingLaterToday() throws {
+		try withStore { store, _ in
+			var calendar = Calendar(identifier: .gregorian)
+			calendar.timeZone = TimeZone(identifier: "Europe/Berlin")!
+			let today = calendar.date(from: DateComponents(year: 2026, month: 9, day: 24, hour: 12))!
+			let dates = [
+				calendar.date(byAdding: .day, value: -3, to: today)!,
+				calendar.date(byAdding: .day, value: -2, to: today)!,
+				calendar.date(byAdding: .day, value: -1, to: today)!,
+				calendar.date(byAdding: .hour, value: -2, to: today)!,
+				calendar.date(byAdding: .hour, value: -1, to: today)!
+			]
+			XCTAssertEqual(store.loggingStreak(for: dates, now: today, calendar: calendar), 4)
+			XCTAssertEqual(store.loggingStreak(for: Array(dates.dropLast(2)), now: today, calendar: calendar), 3)
+			XCTAssertEqual(store.loggingStreak(for: [calendar.date(byAdding: .day, value: -4, to: today)!], now: today, calendar: calendar), 0)
+		}
+	}
+
+	func testSingleLoggingStreakCountsEitherFoodOrWeightOncePerDayAndUpdatesAfterDeletion() throws {
+		try withStore { store, _ in
+			let calendar = Calendar.current
+			let today = calendar.startOfDay(for: .now)
+			let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+			let twoDaysAgo = calendar.date(byAdding: .day, value: -2, to: today)!
+			let food = FoodEntry(name: "Meal", calories: 400, protein: 30, carbs: 40, fat: 10, date: today)
+			let yesterdayFood = FoodEntry(name: "Yesterday meal", calories: 400, protein: 30, carbs: 40, fat: 10, date: yesterday)
+			store.foods = [food, yesterdayFood]
+			store.weights = [WeightEntry(kilograms: 97, date: twoDaysAgo), WeightEntry(kilograms: 96.8, date: yesterday)]
+			XCTAssertEqual(store.loggingStreak, 3)
+			store.deleteFood(food)
+			XCTAssertEqual(store.loggingStreak, 2)
+			store.deleteFood(yesterdayFood)
+			store.weights.removeAll { calendar.isDate($0.date, inSameDayAs: yesterday) }
+			XCTAssertEqual(store.loggingStreak, 1)
+		}
+	}
+
+	func testEveryDefaultExerciseHasItsIntendedTutorialQuery() {
+		let expected: [String: String] = [
+			"Bench Press / Chest Press": "bench press", "Lat Pulldown": "lat pulldown",
+			"Seated Cable Row": "seated cable row", "Incline Dumbbell Press": "incline dumbbell press",
+			"Cable Lateral Raise": "cable lateral raise", "Triceps Pushdown": "triceps pushdown",
+			"Dumbbell Curl": "dumbbell curl", "Dead Bug": "dead bug",
+			"Back Squat / Hack Squat": "back squat", "Romanian Deadlift": "romanian deadlift",
+			"Leg Press": "leg press", "Leg Curl": "leg curl", "Standing Calf Raise": "standing calf raise",
+			"Cable Crunch": "cable crunch", "Side Plank": "side plank",
+			"Overhead Press / Shoulder Press": "shoulder press", "Pull-Up / Assisted Pull-Up": "pull up",
+			"Dumbbell Bench Press": "dumbbell bench press", "Chest-Supported Row": "chest supported row",
+			"Rear Delt Fly": "rear delt fly", "Triceps Extension": "triceps extension",
+			"Hammer Curl": "hammer curl", "Hollow Body Hold": "hollow body hold",
+			"Deadlift Variation / Trap Bar Deadlift": "trap bar deadlift", "Bulgarian Split Squat": "bulgarian split squat",
+			"Hip Thrust": "hip thrust", "Leg Extension": "leg extension", "Seated Leg Curl": "seated leg curl",
+			"Seated Calf Raise": "seated calf raise", "Hanging Knee Raise": "hanging knee raise"
+		]
+		let exercises = TrainingPlan.default.templates.flatMap(\.exercises)
+		XCTAssertEqual(exercises.count, expected.count)
+		XCTAssertEqual(Set(exercises.map(\.name)).count, exercises.count)
+		for exercise in exercises {
+			XCTAssertEqual(exercise.exerciseDBQuery, expected[exercise.name], "Wrong tutorial mapping for \(exercise.name)")
+			XCTAssertFalse(exercise.matAlternative.isEmpty, "Missing mat alternative: \(exercise.name)")
+		}
+	}
+
+	func testExerciseDBRefusesWrongFirstResultAndNormalizesPunctuation() throws {
+		func result(_ id: String, _ name: String) -> ExerciseDBExercise {
+			ExerciseDBExercise(exerciseID: id, name: name, imageURL: nil, imageURLs: nil, equipments: [], bodyParts: [], exerciseType: nil, targetMuscles: [], secondaryMuscles: [], videoURL: nil, overview: nil, instructions: [], exerciseTips: [], variations: [])
+		}
+		let misleading = [result("arnold", "Arnold Press"), result("leg-press", "Leg Press")]
+		XCTAssertEqual(ExerciseDBService.exactMatch(in: misleading, for: "Leg Press")?.exerciseID, "leg-press")
+		XCTAssertNil(ExerciseDBService.exactMatch(in: [result("arnold", "Arnold Press")], for: "Leg Press"))
+		XCTAssertEqual(ExerciseDBService.exactMatch(in: [result("bench", "Bench-Press")], for: "bench press")?.exerciseID, "bench")
 	}
 
 	func testExerciseDBDetailDecodesTutorialMedia() throws {

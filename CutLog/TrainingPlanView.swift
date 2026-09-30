@@ -7,12 +7,8 @@ struct TrainingPlanView: View {
 	@State private var showingWorkout = false
 	@State private var showingPlanEditor = false
 
-	private var nextScheduled: (workout: ScheduledWorkout, date: Date) {
-		store.nextScheduledWorkout
-	}
-
 	private var nextTemplate: WorkoutTemplate {
-		store.nextWorkout
+		store.launchWorkout.template
 	}
 
 	var body: some View {
@@ -20,7 +16,7 @@ struct TrainingPlanView: View {
 			ScrollView {
 				VStack(alignment: .leading, spacing: 16) {
 					Button { showingWorkout = true } label: {
-						NextWorkoutCard(template: nextTemplate, date: nextScheduled.date, isDue: store.workoutIsDue, isResuming: store.activeWorkout != nil)
+						NextWorkoutCard(template: nextTemplate, date: store.launchWorkout.date, isDue: store.workoutIsDue, isResuming: !store.unfinishedWorkouts.isEmpty)
 					}
 					.buttonStyle(.plain)
 
@@ -50,7 +46,11 @@ struct TrainingPlanView: View {
 				}
 			}
 			.sheet(isPresented: $showingWorkout) {
-				WorkoutView(template: nextTemplate)
+				if store.unfinishedWorkouts.isEmpty && store.workoutIsDue {
+					WorkoutView(template: store.launchWorkout.template)
+				} else {
+					WorkoutLaunchView()
+				}
 			}
 			.sheet(item: $selectedTemplate) { template in
 				WorkoutDetailView(template: template)
@@ -71,13 +71,13 @@ private struct NextWorkoutCard: View {
 	var body: some View {
 		VStack(alignment: .leading, spacing: 12) {
 			HStack {
-				Label(isResuming ? "Resume session" : (isDue ? "Today" : date.formatted(.dateTime.weekday(.wide))), systemImage: "figure.strengthtraining.traditional")
+				Label(isResuming ? "Choose session" : (Calendar.current.isDateInToday(date) ? "Today" : date.formatted(.dateTime.weekday(.wide))), systemImage: "figure.strengthtraining.traditional")
 					.font(.subheadline.weight(.semibold))
-					.foregroundStyle(.orange)
+					.foregroundStyle(CutLogStyle.accent)
 				Spacer()
 				Image(systemName: "arrow.right.circle.fill")
 					.font(.title3)
-					.foregroundStyle(.orange)
+					.foregroundStyle(CutLogStyle.accent)
 			}
 			Text(template.title)
 				.font(.title2.weight(.bold))
@@ -92,7 +92,7 @@ private struct NextWorkoutCard: View {
 		}
 		.padding(20)
 		.frame(maxWidth: .infinity, alignment: .leading)
-		.background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+		.background(CutLogStyle.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
 	}
 }
 
@@ -106,7 +106,7 @@ private struct WeekRow: View {
 		HStack(spacing: 12) {
 			Text(scheduled.shortDay)
 				.font(.caption.weight(.bold))
-				.foregroundStyle(isToday ? .orange : .secondary)
+				.foregroundStyle(isToday ? CutLogStyle.accent : .secondary)
 				.frame(width: 32, alignment: .leading)
 			VStack(alignment: .leading, spacing: 2) {
 				Text(template.title).foregroundStyle(.primary)
@@ -115,7 +115,7 @@ private struct WeekRow: View {
 			Spacer()
 			if isToday {
 				Image(systemName: isDone ? "checkmark.circle.fill" : "circle.fill")
-					.foregroundStyle(isDone ? .green : .orange)
+					.foregroundStyle(isDone ? .green : CutLogStyle.accent)
 			} else {
 				Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
 			}
@@ -196,7 +196,7 @@ private struct ExerciseDetailView: View {
 				VStack(alignment: .leading, spacing: 20) {
 					Text(exercise.muscleGroup.uppercased())
 						.font(.caption.weight(.bold))
-						.foregroundStyle(.orange)
+.foregroundStyle(CutLogStyle.accent)
 					Text(exercise.name).font(.title2.weight(.bold))
 					HStack(spacing: 8) {
 						Pill("\(exercise.sets) sets", "number")

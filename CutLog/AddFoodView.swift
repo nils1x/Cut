@@ -14,6 +14,7 @@ struct AddFoodView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
+    @State private var mealDescription = ""
     @State private var calories = ""
     @State private var protein = ""
     @State private var carbs = ""
@@ -127,10 +128,21 @@ struct AddFoodView: View {
                     }
                 }
 
+                Section("Describe meal") {
+                    HStack {
+                        TextField("e.g. 3 pieces of Diavola pizza", text: $mealDescription)
+                            .textInputAutocapitalization(.sentences)
+                        Button("Estimate") { Task { await estimateDescription() } }
+                            .disabled(mealDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isEstimating)
+                    }
+                    Text("Estimates the whole portion. Review before saving.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+
                 Section("Meal") {
-                    TextField("What did you eat?", text: $name)
+                    TextField("Food name", text: $name)
                     nutritionField("Calories", unit: "kcal", text: $calories)
-                    nutritionField("Serving", unit: "g", text: $servingGrams, keyboard: .decimalPad)
+                    nutritionField("Portion (optional)", unit: "g", text: $servingGrams, keyboard: .decimalPad)
                         .onChange(of: servingGrams) { _, gramsText in
                             guard let scannedProduct,
                                   let grams = Double(gramsText.replacingOccurrences(of: ",", with: ".")),
@@ -185,7 +197,7 @@ struct AddFoodView: View {
                 }
             } label: {
                 Image(systemName: store.isPinned(food) ? "pin.fill" : "pin")
-                    .foregroundStyle(store.isPinned(food) ? .orange : .secondary)
+                    .foregroundStyle(store.isPinned(food) ? Color.accentColor : Color.secondary)
                     .frame(minWidth: 44, minHeight: 44)
             }
             .accessibilityLabel(store.isPinned(food) ? "Remove \(food.name) from Quick log" : "Pin \(food.name) to Quick log")
@@ -221,11 +233,34 @@ struct AddFoodView: View {
     }
 
     @MainActor
+    private func estimateDescription() async {
+        let description = mealDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !description.isEmpty else { return }
+        isEstimating = true
+        estimationError = nil
+        scannedProduct = nil
+        barcode = nil
+        servingGrams = ""
+        defer { isEstimating = false }
+        do {
+            let result = try await MealEstimateService.estimate(description: description)
+            name = result.name
+            calories = String(result.calories)
+            protein = String(result.protein)
+            carbs = String(result.carbs)
+            fat = String(result.fat)
+        } catch {
+            estimationError = error.localizedDescription
+        }
+    }
+
+    @MainActor
     private func estimate(_ image: UIImage) async {
         isEstimating = true
         estimationError = nil
         scannedProduct = nil
         barcode = nil
+        servingGrams = ""
         defer { isEstimating = false }
         do {
             let result = try await MealEstimateService.estimate(from: image)
@@ -274,7 +309,7 @@ struct AddFoodView: View {
         protein = String(food.protein)
         carbs = String(food.carbs)
         fat = String(food.fat)
-        servingGrams = food.servingGrams.map { String(format: "%.0f", $0) } ?? "100"
+        servingGrams = food.servingGrams.map { String(format: "%.0f", $0) } ?? ""
         barcode = food.barcode
     }
 

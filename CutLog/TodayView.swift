@@ -6,7 +6,6 @@ struct TodayView: View {
     @State private var foodRoute: AddFoodView.StartMode?
     @State private var showingWorkout = false
     @State private var showingWeight = false
-    @State private var weightRange = 90
     @ScaledMetric(relativeTo: .largeTitle) private var calorieFontSize = 48
 
     private var totals: DailyTotals { store.todayTotals }
@@ -16,9 +15,17 @@ struct TodayView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text(Date.now, format: .dateTime.weekday(.wide).month(.abbreviated).day())
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.secondary)
+                    HStack(alignment: .center) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("Cut.")
+                                .font(.largeTitle.weight(.bold))
+                            Text(Date.now, format: .dateTime.weekday(.wide).month(.abbreviated).day())
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer(minLength: 12)
+                        LoggingStreakDisplay(streak: store.loggingStreak)
+                    }
 
                     VStack(alignment: .leading, spacing: 14) {
                         HStack(alignment: .firstTextBaseline) {
@@ -30,24 +37,30 @@ struct TodayView: View {
                                 .font(.subheadline).foregroundStyle(.secondary)
                         }
                         ProgressView(value: min(1, max(0, Double(totals.calories) / Double(max(1, store.settings.calorieGoal)))))
-                            .tint(.orange)
+                            .tint(Color.accentColor)
                         LabeledContent("Protein", value: "\(totals.protein) / \(store.settings.proteinGoal) g")
                             .font(.subheadline).monospacedDigit()
                         Divider()
                         WeightSummary(latestWeight: store.latestWeight,
-                                      trend: store.weightTrend(days: weightRange == 0 ? nil : weightRange),
-                                      range: $weightRange) { showingWeight = true }
+                                      trend: store.weightTrend(days: 90)) { showingWeight = true }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(20)
-                    .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                     Button { showingWorkout = true } label: {
-                        WorkoutStatusCard(template: store.nextWorkout, isDue: store.workoutIsDue, isResuming: store.activeWorkout != nil, didTrainToday: store.workouts.contains { Calendar.current.isDateInToday($0.completedAt) })
+                        WorkoutStatusCard(template: store.launchWorkout.template, isDue: store.workoutIsDue, isResuming: !store.unfinishedWorkouts.isEmpty, didTrainToday: !store.workoutIsDue && WorkoutSchedule.scheduledWorkout(on: .now) != nil && store.workouts.contains { $0.templateID == store.launchWorkout.template.id && Calendar.current.isDateInToday($0.startedAt ?? $0.completedAt) })
                     }
                     .buttonStyle(.plain)
 
-                    FoodActionsCard { foodRoute = $0 }
+                    Button { foodRoute = .manual } label: {
+                        Label("Log food", systemImage: "plus.circle.fill")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, minHeight: 54)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color.accentColor)
+                    .accessibilityHint("Opens food logging. Barcode and photo options are available there.")
 
                     if !store.quickLogFoods.isEmpty {
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -98,111 +111,67 @@ struct TodayView: View {
                 .padding(.horizontal)
                 .padding(.bottom)
             }
-            .navigationTitle("Cut.")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Cut.").font(.headline.weight(.bold))
-                }
-            }
+            .toolbar(.hidden, for: .navigationBar)
             .task(id: store.workouts.count) {
                 await WorkoutReminder.refresh(isDue: store.workoutIsDue, enabled: store.settings.reminderEnabled)
             }
             .sheet(item: $foodRoute) { mode in AddFoodView(startMode: mode) }
-            .sheet(isPresented: $showingWorkout) { WorkoutView(template: store.nextWorkout) }
+            .sheet(isPresented: $showingWorkout) {
+                if store.unfinishedWorkouts.isEmpty && store.workoutIsDue {
+                    WorkoutView(template: store.launchWorkout.template)
+                } else {
+                    WorkoutLaunchView()
+                }
+            }
             .sheet(isPresented: $showingWeight) { AddWeightView() }
         }
     }
 
 }
 
-private struct FoodActionsCard: View {
-    let select: (AddFoodView.StartMode) -> Void
-
+private struct LoggingStreakDisplay: View {
+    let streak: Int
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("Log food", systemImage: "fork.knife")
-                .font(.headline)
-                .foregroundStyle(.orange)
-
-            HStack(spacing: 10) {
-                FoodActionButton(title: "Barcode", symbol: "barcode.viewfinder") {
-                    select(.barcode)
-                }
-                FoodActionButton(title: "Photo", symbol: "camera") {
-                    select(.photo)
-                }
-                FoodActionButton(title: "Manual", symbol: "square.and.pencil") {
-                    select(.manual)
-                }
-            }
+        HStack(spacing: 4) {
+            Image(systemName: streak > 0 ? "flame.fill" : "flame")
+                .foregroundStyle(streak > 0 ? Color.accentColor : Color.secondary)
+            Text(streak, format: .number)
+                .monospacedDigit()
+                .contentTransition(.numericText())
         }
-        .padding(16)
-        .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-    }
-}
-
-private struct FoodActionButton: View {
-    let title: String
-    let symbol: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 7) {
-                Image(systemName: symbol)
-                    .font(.title3.weight(.semibold))
-                Text(title)
-                    .font(.caption.weight(.semibold))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .foregroundStyle(.primary)
-            .background(.background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Log food with \(title)")
+        .font(.subheadline.weight(.semibold))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(streak) day logging streak. Any food or weight log counts.")
     }
 }
 
 private struct WeightSummary: View {
     let latestWeight: WeightEntry?
     let trend: [WeightTrendPoint]
-    @Binding var range: Int
     let addWeight: () -> Void
-
-    private var rangeTitle: String { range == 0 ? "All time" : "\(range) days" }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Button(action: addWeight) {
-                    HStack(spacing: 6) {
-                        Text("Weight").foregroundStyle(.secondary)
-                        if let latestWeight {
-                            Text("\(latestWeight.kilograms, format: .number.precision(.fractionLength(1))) kg")
-                                .fontWeight(.semibold).foregroundStyle(.primary)
-                        }
-                        Image(systemName: "plus.circle").foregroundStyle(.orange)
+            Button(action: addWeight) {
+                HStack(spacing: 10) {
+                    Image(systemName: "scalemass")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(Color.accentColor)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Weight").font(.caption).foregroundStyle(.secondary)
+                        Text(latestWeight.map { "\($0.kilograms, format: .number.precision(.fractionLength(1))) kg" } ?? "Log your weight")
+                            .font(.headline.weight(.semibold)).foregroundStyle(.primary)
                     }
-                    .font(.subheadline)
-                    .frame(minHeight: 44)
+                    Spacer()
+                    Text(Calendar.current.isDateInToday(latestWeight?.date ?? .distantPast) ? "Logged today" : "Add weight")
+                        .font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                    Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                 }
-                .buttonStyle(.plain)
-                .accessibilityHint("Add a weigh-in")
-                Spacer(minLength: 4)
-                Menu {
-                    Picker("Weight history", selection: $range) {
-                        Text("30 days").tag(30)
-                        Text("90 days").tag(90)
-                        Text("All time").tag(0)
-                    }
-                } label: {
-                    Label(rangeTitle, systemImage: "chevron.down")
-                        .font(.caption).foregroundStyle(.secondary)
-                        .frame(minHeight: 44)
-                }
+                .frame(maxWidth: .infinity, minHeight: 60)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel(latestWeight.map { "Log weight. Latest \($0.kilograms.formatted(.number.precision(.fractionLength(1)))) kilograms" } ?? "Log weight")
             if let first = trend.first, let last = trend.last {
                 if trend.count > 1 {
                     HStack {
@@ -226,7 +195,7 @@ private struct WeightSummary: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
             } else {
-                Text(latestWeight == nil ? "Add a weigh-in to start your trend." : "No weigh-ins in this range. Try All time.")
+                Text(latestWeight == nil ? "Add a weigh-in to start your trend." : "No weigh-ins in the last 90 days.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             if let latestWeight, !Calendar.current.isDateInToday(latestWeight.date) {
@@ -266,16 +235,16 @@ private struct WorkoutStatusCard: View {
         HStack(spacing: 16) {
             Image(systemName: isResuming ? "play.fill" : (didTrainToday ? "checkmark.circle.fill" : "figure.strengthtraining.traditional"))
                 .font(.title2)
-                .foregroundStyle(isDue ? .orange : .green)
+                .foregroundStyle(isDue ? Color.accentColor : Color.secondary)
                 .frame(width: 42, height: 42)
-                .background((isDue ? Color.orange : .green).opacity(0.14), in: Circle())
+                .background((isDue ? Color.accentColor : Color.secondary).opacity(0.14), in: Circle())
             VStack(alignment: .leading, spacing: 3) {
-                Text(isResuming ? "Resume training" : (isDue ? "Training today" : (didTrainToday ? "Training saved" : "Recovery day")))
+                Text(isResuming ? "Choose workout" : (isDue ? "Training today" : (didTrainToday ? "Training saved" : "Recovery day")))
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(isDue ? .orange : .green)
+                    .foregroundStyle(isDue ? Color.accentColor : Color.secondary)
                 Text(template.title)
                     .font(.headline)
-                Text(isResuming ? "Your sets are saved" : (isDue ? template.subtitle : "Next session"))
+                Text(isResuming ? "Continue a saved session or start this one" : (isDue ? template.subtitle : (didTrainToday ? "Completed today" : "Next session")))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -283,7 +252,7 @@ private struct WorkoutStatusCard: View {
             Image(systemName: "chevron.right").foregroundStyle(.tertiary)
         }
         .padding(18)
-        .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 
@@ -293,9 +262,9 @@ private struct FoodRow: View {
     var body: some View {
         HStack {
             Image(systemName: "fork.knife")
-                .foregroundStyle(.orange)
+                .foregroundStyle(Color.accentColor)
                 .frame(width: 34, height: 34)
-                .background(.orange.opacity(0.12), in: Circle())
+                .background(Color.accentColor.opacity(0.12), in: Circle())
             VStack(alignment: .leading, spacing: 3) {
                 Text(food.name).fontWeight(.medium)
                 Text("P \(food.protein)g · C \(food.carbs)g · F \(food.fat)g")

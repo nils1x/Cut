@@ -16,6 +16,23 @@ struct ExerciseDBExercise: Decodable, Hashable {
     let exerciseTips: [String]
     let variations: [String]
 
+    init(exerciseID: String, name: String, imageURL: URL?, imageURLs: [String: URL]?, equipments: [String], bodyParts: [String], exerciseType: String?, targetMuscles: [String], secondaryMuscles: [String], videoURL: URL?, overview: String?, instructions: [String], exerciseTips: [String], variations: [String]) {
+        self.exerciseID = exerciseID
+        self.name = name
+        self.imageURL = imageURL
+        self.imageURLs = imageURLs
+        self.equipments = equipments
+        self.bodyParts = bodyParts
+        self.exerciseType = exerciseType
+        self.targetMuscles = targetMuscles
+        self.secondaryMuscles = secondaryMuscles
+        self.videoURL = videoURL
+        self.overview = overview
+        self.instructions = instructions
+        self.exerciseTips = exerciseTips
+        self.variations = variations
+    }
+
     enum CodingKeys: String, CodingKey {
         case exerciseID = "exerciseId"
         case name, imageURL = "imageUrl", imageURLs, equipments, bodyParts, exerciseType
@@ -79,12 +96,34 @@ actor ExerciseDBService {
             queryItems: [URLQueryItem(name: "search", value: query)],
             apiKey: key
         )
-        guard let result = results.first(where: {
-            $0.name.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(query) == .orderedSame
-        }) ?? results.first else {
+        guard let result = Self.exactMatch(in: results, for: query) else {
             throw ExerciseDBError.noMatch
         }
-        return try await request(path: "/api/v1/exercises/\(result.exerciseID)", queryItems: [], apiKey: key)
+        let detail: ExerciseDBExercise = try await request(
+            path: "/api/v1/exercises/\(result.exerciseID)", queryItems: [], apiKey: key
+        )
+        // Search results are untrusted: only show a tutorial whose detail still names the requested exercise.
+        guard Self.normalizedName(detail.name) == Self.normalizedName(query) else {
+            throw ExerciseDBError.noMatch
+        }
+        return detail
+    }
+
+    static func exactMatch(in results: [ExerciseDBExercise], for query: String) -> ExerciseDBExercise? {
+        guard let index = exactMatchIndex(in: results.map(\.name), for: query) else { return nil }
+        return results[index]
+    }
+
+    static func exactMatchIndex(in names: [String], for query: String) -> Int? {
+        let expected = normalizedName(query)
+        guard !expected.isEmpty else { return nil }
+        return names.firstIndex { normalizedName($0) == expected }
+    }
+
+    private static func normalizedName(_ name: String) -> String {
+        name.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+            .split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+            .joined(separator: " ")
     }
 
     private func request<Value: Decodable>(path: String, queryItems: [URLQueryItem], apiKey: String) async throws -> Value {

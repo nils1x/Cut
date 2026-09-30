@@ -14,7 +14,7 @@ struct RootView: View {
             SettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
-        .tint(.orange)
+        .tint(CutLogStyle.accent)
         .task { await store.importLatestHealthWeight() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {

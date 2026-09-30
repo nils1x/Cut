@@ -11,6 +11,7 @@ final class AppStore {
 	var settings: AppSettings { didSet { save(settings, key: Keys.settings); refreshWidget() } }
 	var trainingPlan: TrainingPlan { didSet { save(trainingPlan, key: Keys.trainingPlan) } }
 	private(set) var activeWorkout: WorkoutDraft? { didSet { save(activeWorkout, key: Keys.activeWorkout) } }
+	private(set) var pausedWorkouts: [WorkoutDraft] { didSet { save(pausedWorkouts, key: Keys.pausedWorkouts) } }
 	var healthSyncError: String?
 	private let defaults: UserDefaults
 	private let sideEffectsEnabled: Bool
@@ -23,6 +24,7 @@ final class AppStore {
 		static let settings = "settings"
 		static let trainingPlan = "training-plan-v2"
 		static let activeWorkout = "active-workout-v1"
+		static let pausedWorkouts = "paused-workouts-v1"
 	}
 
 	// An injected suite isolates both storage and external effects in tests.
@@ -39,8 +41,12 @@ final class AppStore {
 		let savedPlan = Self.load(TrainingPlan.self, key: Keys.trainingPlan, defaults: storage) ?? .default
 		trainingPlan = Self.upgradeTrainingPlan(savedPlan)
 		activeWorkout = Self.load(WorkoutDraft.self, key: Keys.activeWorkout, defaults: storage)
+		pausedWorkouts = Self.load([WorkoutDraft].self, key: Keys.pausedWorkouts, defaults: storage) ?? []
 		// Recover an interrupted finish without creating a second history entry.
-		if let draft = activeWorkout, workouts.contains(where: { $0.id == draft.id }) { activeWorkout = nil }
+		if let draft = activeWorkout, workouts.contains(where: { $0.id == draft.id }) {
+			activeWorkout = pausedWorkouts.last { paused in !workouts.contains(where: { $0.id == paused.id }) }
+		}
+		pausedWorkouts.removeAll { draft in workouts.contains { $0.id == draft.id } || draft.id == activeWorkout?.id }
 		refreshWidget()
 	}
 
@@ -99,11 +105,44 @@ final class AppStore {
 
 	var nextWorkout: WorkoutTemplate {
 		if let draft = activeWorkout { return draft.template }
-		return template(for: nextScheduledWorkout.workout.templateID) ?? trainingPlan.templates.first ?? .upperA
+		return scheduledTemplate
+	}
+
+	var scheduledTemplate: WorkoutTemplate {
+		template(for: nextScheduledWorkout.workout.templateID) ?? trainingPlan.templates.first ?? .upperA
+	}
+
+	var launchWorkout: (template: WorkoutTemplate, date: Date) {
+		if let today = WorkoutSchedule.scheduledWorkout(on: .now) {
+			return (template(for: today.templateID) ?? scheduledTemplate, .now)
+		}
+		return (scheduledTemplate, nextScheduledWorkout.date)
+	}
+
+	var unfinishedWorkouts: [WorkoutDraft] {
+		([activeWorkout].compactMap { $0 } + pausedWorkouts).sorted { $0.startedAt > $1.startedAt }
 	}
 
 	var workoutIsDue: Bool { WorkoutSchedule.isDue(workouts: workouts) }
 	var latestWeight: WeightEntry? { weights.max(by: { $0.date < $1.date }) }
+	var loggingStreak: Int { loggingStreak(for: foods.map(\.date) + weights.map(\.date)) }
+
+	func loggingStreak(for dates: [Date], now: Date = .now, calendar: Calendar = .current) -> Int {
+		let loggedDays = Set(dates.map { calendar.startOfDay(for: $0) })
+		let today = calendar.startOfDay(for: now)
+		let anchor = loggedDays.contains(today)
+			? today
+			: (calendar.date(byAdding: .day, value: -1, to: today) ?? today)
+		guard loggedDays.contains(anchor) else { return 0 }
+		var streak = 0
+		var day = anchor
+		while loggedDays.contains(day) {
+			streak += 1
+			guard let previous = calendar.date(byAdding: .day, value: -1, to: day) else { break }
+			day = previous
+		}
+		return streak
+	}
 
 	// Seven calendar days of smoothing, not seven points of display history.
 	var sevenDayWeightTrend: [WeightTrendPoint] {
@@ -179,6 +218,31 @@ final class AppStore {
 		activeWorkout = WorkoutDraft(template: template)
 	}
 
+	func startScheduledWorkout(_ template: WorkoutTemplate, on date: Date = .now, calendar: Calendar = .current) {
+		if let current = activeWorkout,
+			current.template.id == template.id,
+			calendar.isDate(current.startedAt, inSameDayAs: date) { return }
+		if let current = activeWorkout { pausedWorkouts.append(current) }
+		if let index = pausedWorkouts.firstIndex(where: {
+			$0.template.id == template.id && calendar.isDate($0.startedAt, inSameDayAs: date)
+		}) {
+			let resumed = pausedWorkouts[index]
+			activeWorkout = resumed
+			pausedWorkouts.remove(at: index)
+		} else {
+			activeWorkout = WorkoutDraft(template: template, startedAt: date)
+		}
+	}
+
+	func resumeWorkout(_ id: UUID) {
+		guard activeWorkout?.id != id,
+			let index = pausedWorkouts.firstIndex(where: { $0.id == id }) else { return }
+		if let current = activeWorkout { pausedWorkouts.append(current) }
+		let resumed = pausedWorkouts[index]
+		activeWorkout = resumed
+		pausedWorkouts.remove(at: index)
+	}
+
 	func updateWorkoutSet(_ value: WorkoutSetDraft) {
 		guard let index = activeWorkout?.sets.firstIndex(where: { $0.id == value.id }) else { return }
 		activeWorkout?.sets[index] = value
@@ -190,7 +254,8 @@ final class AppStore {
 		let workout = WorkoutEntry(id: draft.id, templateID: draft.template.id, sets: draft.loggedSets,
 			startedAt: draft.startedAt, templateTitle: draft.template.title, setRecords: draft.sets)
 		if !workouts.contains(where: { $0.id == draft.id }) { workouts.append(workout) }
-		activeWorkout = nil
+		activeWorkout = pausedWorkouts.last
+		if activeWorkout != nil { pausedWorkouts.removeLast() }
 		if sideEffectsEnabled && settings.healthSyncEnabled {
 			Task {
 				do { try await HealthKitStore.shared.save(workout: workout) }

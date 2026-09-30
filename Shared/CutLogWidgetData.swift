@@ -1,4 +1,9 @@
 import Foundation
+import SwiftUI
+
+enum CutLogStyle {
+    static let accent = Color(red: 0.39, green: 0.45, blue: 0.35)
+}
 
 struct CalorieDay: Codable, Identifiable, Equatable {
     let date: Date

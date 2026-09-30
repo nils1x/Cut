@@ -79,7 +79,7 @@ private struct CutLogWidgetView: View {
             ForEach(week) { day in
                 if let calories = day.calories {
                     BarMark(x: .value("Day", day.date, unit: .day), y: .value("Calories", calories))
-                        .foregroundStyle(Calendar.current.isDate(day.date, inSameDayAs: entry.date) ? Color.orange : Color.primary.opacity(0.35))
+                        .foregroundStyle(Calendar.current.isDate(day.date, inSameDayAs: entry.date) ? CutLogStyle.accent : Color.primary.opacity(0.35))
                         .cornerRadius(2)
                 }
             }
