@@ -44,9 +44,9 @@ struct WorkoutLaunchView: View {
 
 	private func choice(title: String, template: WorkoutTemplate, footer: String, symbol: String) -> some View {
 		HStack(alignment: .top, spacing: 12) {
-			Image(systemName: symbol).foregroundStyle(CutLogStyle.accent).frame(width: 24)
+			Image(systemName: symbol).foregroundStyle(CutLogPalette.sage).frame(width: 24)
 			VStack(alignment: .leading, spacing: 6) {
-				Text(title).font(.caption.weight(.semibold)).foregroundStyle(CutLogStyle.accent)
+				Text(title).font(.caption.weight(.semibold)).foregroundStyle(CutLogPalette.sage)
 				Text(template.title).font(.headline).foregroundStyle(.primary)
 				Text(template.subtitle).font(.subheadline).foregroundStyle(.secondary)
 				Text(footer).font(.caption).foregroundStyle(.secondary)

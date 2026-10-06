@@ -39,6 +39,111 @@ struct FoodEntry: Identifiable, Codable, Hashable {
 	}
 }
 
+/// Derived cache of everything ever logged, keyed by normalized name + portion + barcode.
+/// The log in `foods` stays the source of truth; this only makes relogging searchable.
+struct FoodCatalogItem: Codable, Hashable, Identifiable {
+	var id: String
+	var name: String
+	var calories: Int
+	var protein: Int
+	var carbs: Int
+	var fat: Int
+	var servingGrams: Double?
+	var barcode: String?
+	var lastUsedAt: Date
+	var useCount: Int
+
+	init(food: FoodEntry, id: String) {
+		self.id = id
+		name = food.name
+		calories = food.calories
+		protein = food.protein
+		carbs = food.carbs
+		fat = food.fat
+		servingGrams = food.servingGrams
+		barcode = food.barcode
+		lastUsedAt = food.date
+		useCount = 1
+	}
+
+	/// Rebuilds an item from a log entry, preserving existing counters.
+	mutating func absorb(_ food: FoodEntry) {
+		name = food.name
+		calories = food.calories
+		protein = food.protein
+		carbs = food.carbs
+		fat = food.fat
+		servingGrams = food.servingGrams
+		barcode = food.barcode
+		lastUsedAt = max(lastUsedAt, food.date)
+		useCount += 1
+	}
+
+	func entry(at date: Date = .now) -> FoodEntry {
+		FoodEntry(name: name, calories: calories, protein: protein, carbs: carbs, fat: fat,
+		          servingGrams: servingGrams, barcode: barcode, date: date)
+	}
+}
+
+/// One cell of the 30-day consistency grid. Level rises with how much was logged that day,
+/// same direction as a GitHub contribution graph: more complete = more saturated.
+struct ConsistencyDay: Identifiable, Equatable {
+	enum Level: Int, Comparable, CaseIterable {
+		case none = 0, weightOnly = 1, food = 2, trained = 3, full = 4
+		static func < (lhs: Level, rhs: Level) -> Bool { lhs.rawValue < rhs.rawValue }
+	}
+
+	let date: Date
+	let level: Level
+	var id: Date { date }
+}
+
+/// Last-N-day consistency. One shared definition so the dashboard grid and the streak can
+/// never disagree about what counts as a logged day. Levels add workout context on top;
+/// the streak rule itself stays "food or weight".
+enum Consistency {
+	/// Window of the last `days` calendar days, oldest first.
+	static func days(loggedDates: [Date], days: Int = 30, now: Date = .now, calendar: Calendar = .current) -> [(date: Date, logged: Bool)] {
+		let logged = Set(loggedDates.map { calendar.startOfDay(for: $0) })
+		let today = calendar.startOfDay(for: now)
+		guard days > 0, let start = calendar.date(byAdding: .day, value: -(days - 1), to: today) else { return [] }
+		return (0..<days).compactMap { offset in
+			guard let day = calendar.date(byAdding: .day, value: offset, to: start) else { return nil }
+			return (date: day, logged: logged.contains(day))
+		}
+	}
+
+	/// A day counts as trained only when the session scheduled for that weekday was the one
+	/// completed, with at least one completed set. Same rule the Cut score already uses.
+	static func trainedDays(workouts: [WorkoutEntry], calendar: Calendar = .current) -> Set<Date> {
+		var trained: Set<Date> = []
+		for workout in workouts where workout.completedSetCount > 0 {
+			guard let scheduled = WorkoutSchedule.scheduledWorkout(on: workout.startedAt ?? workout.completedAt, calendar: calendar),
+				scheduled.templateID == workout.templateID else { continue }
+			trained.insert(calendar.startOfDay(for: workout.startedAt ?? workout.completedAt))
+		}
+		return trained
+	}
+
+	static func levels(foods: [FoodEntry], weights: [WeightEntry], workouts: [WorkoutEntry],
+	                    days: Int = 30, now: Date = .now, calendar: Calendar = .current) -> [ConsistencyDay] {
+		let foodDays = Set(foods.map { calendar.startOfDay(for: $0.date) })
+		let weightDays = Set(weights.map { calendar.startOfDay(for: $0.date) })
+		let trained = trainedDays(workouts: workouts, calendar: calendar)
+		return Self.days(loggedDates: foods.map(\.date) + weights.map(\.date), days: days, now: now, calendar: calendar).map { day in
+			let level: ConsistencyDay.Level
+			switch (foodDays.contains(day.date), trained.contains(day.date), weightDays.contains(day.date)) {
+			case (true, true, _): level = .full
+			case (false, true, _): level = .trained
+			case (true, false, _): level = .food
+			case (false, false, true): level = .weightOnly
+			default: level = .none
+			}
+			return ConsistencyDay(date: day.date, level: level)
+		}
+	}
+}
+
 struct WeightEntry: Identifiable, Codable, Hashable {
 	var id = UUID()
 	var kilograms: Double
@@ -338,6 +443,72 @@ struct DailyTotals: Equatable {
 	var protein = 0
 	var carbs = 0
 	var fat = 0
+}
+
+/// What the dashboard hero shows: consumed calories, never remaining.
+struct CalorieHeadline: Equatable {
+	let consumed: Int
+	let goal: Int
+	let isOverGoal: Bool
+
+	init(totals: DailyTotals, goal: Int) {
+		consumed = totals.calories
+		self.goal = max(0, goal)
+		isOverGoal = consumed > self.goal
+	}
+
+	var progress: Double {
+		guard goal > 0 else { return 0 }
+		return Double(consumed) / Double(goal)
+	}
+}
+
+struct CutScoreSnapshot: Equatable {
+	let score: Int
+	let calorieAdherence: Int
+	let proteinProgress: Int
+	let trainingConsistency: Int
+	let loggedFoodDays: Int
+	let scheduledTrainingDays: Int
+}
+
+enum CutScore {
+	/// A transparent product heuristic, not a health assessment. Food days without entries are unknown, not zero.
+	static func calculate(foods: [FoodEntry], workouts: [WorkoutEntry], calorieGoal: Int, proteinGoal: Int, now: Date = .now, calendar: Calendar = .current) -> CutScoreSnapshot? {
+		guard calorieGoal > 0, proteinGoal > 0 else { return nil }
+		let today = calendar.startOfDay(for: now)
+		guard let start = calendar.date(byAdding: .day, value: -7, to: today) else { return nil }
+		let recentFoods = foods.filter { $0.date >= start && $0.date < today }
+		let foodDays = Dictionary(grouping: recentFoods) { calendar.startOfDay(for: $0.date) }
+		guard foodDays.count >= 3 else { return nil }
+
+		let dailyCalories = foodDays.values.map { entries in entries.reduce(0) { $0 + $1.calories } }
+		let dailyProtein = foodDays.values.map { entries in entries.reduce(0) { $0 + $1.protein } }
+		let calorieScore = Int((dailyCalories.map { intake in
+			let deviation = abs(Double(intake - calorieGoal)) / Double(calorieGoal)
+			return max(0, min(100, 100 * (1 - max(0, deviation - 0.10) / 0.40)))
+		}.reduce(0, +) / Double(dailyCalories.count)).rounded())
+		let proteinScore = Int((dailyProtein.map { min(100, max(0, Double($0) / Double(proteinGoal) * 100)) }
+			.reduce(0, +) / Double(dailyProtein.count)).rounded())
+
+		let trainingDays = (0..<7).compactMap { offset in
+			calendar.date(byAdding: .day, value: offset, to: start)
+		}.filter { WorkoutSchedule.scheduledWorkout(on: $0, calendar: calendar) != nil }
+		let completedScheduledDays = trainingDays.filter { day in
+			guard let scheduled = WorkoutSchedule.scheduledWorkout(on: day, calendar: calendar) else { return false }
+			return workouts.contains { workout in
+				workout.templateID == scheduled.templateID
+					&& workout.completedSetCount > 0
+					&& calendar.isDate(workout.startedAt ?? workout.completedAt, inSameDayAs: day)
+			}
+		}.count
+		let trainingScore = trainingDays.isEmpty ? 0 : Int((Double(completedScheduledDays) / Double(trainingDays.count) * 100).rounded())
+		let combined = Double(calorieScore) * 0.40 + Double(proteinScore) * 0.35 + Double(trainingScore) * 0.25
+
+		return CutScoreSnapshot(score: Int(combined.rounded()), calorieAdherence: calorieScore, proteinProgress: proteinScore,
+		                        trainingConsistency: trainingScore, loggedFoodDays: foodDays.count,
+		                        scheduledTrainingDays: trainingDays.count)
+	}
 }
 
 struct ScheduledWorkout: Identifiable, Hashable {

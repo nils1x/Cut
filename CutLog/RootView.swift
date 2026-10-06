@@ -3,6 +3,7 @@ import SwiftUI
 struct RootView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.scenePhase) private var scenePhase
+
     var body: some View {
         TabView {
             TodayView()
@@ -14,7 +15,7 @@ struct RootView: View {
             SettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
-        .tint(CutLogStyle.accent)
+        .tint(CutLogPalette.apricot)
         .task { await store.importLatestHealthWeight() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {

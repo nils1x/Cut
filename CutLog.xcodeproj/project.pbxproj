@@ -9,13 +9,17 @@
 /* Begin PBXBuildFile section */
 		06AC767B161545ED821C903B /* CutLogWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358FEDB859AF3497E2213812 /* CutLogWidgetData.swift */; };
 		10B1999FA1B3170E1ED64729 /* WorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B63F939D09746BD8BA015144 /* WorkoutView.swift */; };
+		1423D1C07A75C8C806207F91 /* CutScoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D9436276D94AF871543D19C /* CutScoreView.swift */; };
+		17D2D72414BBF041D4DB1050 /* CutLogPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D7A84D89D4F304981B9448 /* CutLogPalette.swift */; };
 		28048FCFDB75CFD03ABFA088 /* CutLogWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6DB64FDB8E4930E3245BE0C /* CutLogWidget.swift */; };
 		327B6034C00CD0985BA49D0F /* MealEstimateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18D64CDCCAFDD31C940C659 /* MealEstimateService.swift */; };
 		360AFA616726E68790F3B03E /* CameraPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51835279B7C9238707C83F0D /* CameraPicker.swift */; };
+		3B0E3D33FEA3A965CB4CCB45 /* CutLogPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D7A84D89D4F304981B9448 /* CutLogPalette.swift */; };
 		3CF240E54733FDB703E97397 /* BarcodeLookupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F72512D385340811ADBF72FF /* BarcodeLookupService.swift */; };
 		4AC64966B616ACF0E43F33EE /* CutLogWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358FEDB859AF3497E2213812 /* CutLogWidgetData.swift */; };
 		4E9297E51426B64EF169CE72 /* BarcodeScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67BBF06C17BE550913C28993 /* BarcodeScannerView.swift */; };
 		56D582F2F03387E7DC46988B /* WorkoutReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 829C57556046EF9878780275 /* WorkoutReminder.swift */; };
+		57B5BF23AC09A02A964843C9 /* CutLogStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 153647F0069A16FCE1704924 /* CutLogStyle.swift */; };
 		5F3EFB084D57EFB0A286927A /* CutLogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F5801CE05888537F903B9D4 /* CutLogTests.swift */; };
 		6E73A25781B189BA497A01A6 /* CutLogWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9DF2D3F2A6C6388A282D1149 /* CutLogWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		6F848F8CF1E762991268A2B8 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAAB3BCF7062F32B671FF00F /* AppStore.swift */; };
@@ -25,7 +29,10 @@
 		865CC5F29C75EB9BBFE241C7 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E71D8AEF5D04D3DEBFDD101 /* KeychainStore.swift */; };
 		93F68C79E91848A82A37411A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E72A27965B1B2BC51DBAA3EE /* Assets.xcassets */; };
 		9A9AD0682DBD30BF88E72C90 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914A17D2D0EE78F2A9B20A97 /* RootView.swift */; };
+		AB05D80DF870ECDD09E538F7 /* CutLogStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 153647F0069A16FCE1704924 /* CutLogStyle.swift */; };
 		B2C7A5C45554A4BA4C656006 /* CutLogWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358FEDB859AF3497E2213812 /* CutLogWidgetData.swift */; };
+		B95E4C71CEB26DDA0EF342DD /* FoodSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0343CA13689A4ED4BBE9DB5F /* FoodSearch.swift */; };
+		BA43436E228CA361819F2C4B /* CutLogPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D7A84D89D4F304981B9448 /* CutLogPalette.swift */; };
 		BE392D2E7F15A57E0A006C6F /* AddFoodView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5EABD418F91F259AA2B955E /* AddFoodView.swift */; };
 		C0DACEC6C48E847E30E32175 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA9671F2AAA6349982D33E41 /* HealthKit.framework */; };
 		C30290F206B826BD16F53DDB /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3921769E72357CC787AC34CD /* Models.swift */; };
@@ -33,6 +40,8 @@
 		D0109B0C6D1289DDFF3709E2 /* TrainingPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A6FA662302A5F2936F7136 /* TrainingPlanView.swift */; };
 		E026BD93ECF6CD9482C3BE1D /* AddWeightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361E22463CCD6732B954E2BF /* AddWeightView.swift */; };
 		ED18A6F29D3319E36A7C012C /* ExerciseDBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0DC1C25D02658CB53F744D2 /* ExerciseDBService.swift */; };
+		F63FF5CEB3AF4A53EF8DC69B /* CutLogStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 153647F0069A16FCE1704924 /* CutLogStyle.swift */; };
+		F7EB64D8309035432900C6C3 /* ConsistencyChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6155B2B2E03C1871EAF66E85 /* ConsistencyChart.swift */; };
 		FBDCEBCD322E8D606B2428BF /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F7A5E2ABB23EC944C253C1 /* TodayView.swift */; };
 		FD3A62D0A882B90F77754E77 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D4BF39075F6C57DDD4DFCE9 /* WidgetSnapshot.swift */; };
 /* End PBXBuildFile section */
@@ -69,9 +78,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0343CA13689A4ED4BBE9DB5F /* FoodSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodSearch.swift; sourceTree = "<group>"; };
 		08F7A5E2ABB23EC944C253C1 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		0C59FD45B248704CE1AA1564 /* HealthKitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitStore.swift; sourceTree = "<group>"; };
 		0F5801CE05888537F903B9D4 /* CutLogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutLogTests.swift; sourceTree = "<group>"; };
+		153647F0069A16FCE1704924 /* CutLogStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutLogStyle.swift; sourceTree = "<group>"; };
 		358FEDB859AF3497E2213812 /* CutLogWidgetData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutLogWidgetData.swift; sourceTree = "<group>"; };
 		361E22463CCD6732B954E2BF /* AddWeightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWeightView.swift; sourceTree = "<group>"; };
 		3921769E72357CC787AC34CD /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
@@ -80,8 +91,10 @@
 		51835279B7C9238707C83F0D /* CameraPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPicker.swift; sourceTree = "<group>"; };
 		54A03E1F0054A2B5E5210950 /* CutLog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CutLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5651ADE57A2B0381E0A1C0F0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6155B2B2E03C1871EAF66E85 /* ConsistencyChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsistencyChart.swift; sourceTree = "<group>"; };
 		67BBF06C17BE550913C28993 /* BarcodeScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScannerView.swift; sourceTree = "<group>"; };
 		6AAF1ED0088324FE105EE0E1 /* CutLogTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = CutLogTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6D9436276D94AF871543D19C /* CutScoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutScoreView.swift; sourceTree = "<group>"; };
 		7F91A3D51FFAAAAD2908F5CF /* CutLog.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CutLog.entitlements; sourceTree = "<group>"; };
 		829C57556046EF9878780275 /* WorkoutReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutReminder.swift; sourceTree = "<group>"; };
 		8E71D8AEF5D04D3DEBFDD101 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
@@ -99,6 +112,7 @@
 		E2E509DAF6995A7BD4338371 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		E5EABD418F91F259AA2B955E /* AddFoodView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFoodView.swift; sourceTree = "<group>"; };
 		E72A27965B1B2BC51DBAA3EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F3D7A84D89D4F304981B9448 /* CutLogPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CutLogPalette.swift; sourceTree = "<group>"; };
 		F72512D385340811ADBF72FF /* BarcodeLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeLookupService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -124,9 +138,12 @@
 				F72512D385340811ADBF72FF /* BarcodeLookupService.swift */,
 				67BBF06C17BE550913C28993 /* BarcodeScannerView.swift */,
 				51835279B7C9238707C83F0D /* CameraPicker.swift */,
+				6155B2B2E03C1871EAF66E85 /* ConsistencyChart.swift */,
 				7F91A3D51FFAAAAD2908F5CF /* CutLog.entitlements */,
 				AFECDAE37723D950461C0691 /* CutLogApp.swift */,
+				6D9436276D94AF871543D19C /* CutScoreView.swift */,
 				A0DC1C25D02658CB53F744D2 /* ExerciseDBService.swift */,
+				0343CA13689A4ED4BBE9DB5F /* FoodSearch.swift */,
 				0C59FD45B248704CE1AA1564 /* HealthKitStore.swift */,
 				E2E509DAF6995A7BD4338371 /* HistoryView.swift */,
 				8E71D8AEF5D04D3DEBFDD101 /* KeychainStore.swift */,
@@ -154,6 +171,8 @@
 		464D6922AF69605959115C9D /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				F3D7A84D89D4F304981B9448 /* CutLogPalette.swift */,
+				153647F0069A16FCE1704924 /* CutLogStyle.swift */,
 				358FEDB859AF3497E2213812 /* CutLogWidgetData.swift */,
 			);
 			path = Shared;
@@ -316,6 +335,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3B0E3D33FEA3A965CB4CCB45 /* CutLogPalette.swift in Sources */,
+				F63FF5CEB3AF4A53EF8DC69B /* CutLogStyle.swift in Sources */,
 				5F3EFB084D57EFB0A286927A /* CutLogTests.swift in Sources */,
 				B2C7A5C45554A4BA4C656006 /* CutLogWidgetData.swift in Sources */,
 			);
@@ -325,6 +346,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BA43436E228CA361819F2C4B /* CutLogPalette.swift in Sources */,
+				57B5BF23AC09A02A964843C9 /* CutLogStyle.swift in Sources */,
 				28048FCFDB75CFD03ABFA088 /* CutLogWidget.swift in Sources */,
 				4AC64966B616ACF0E43F33EE /* CutLogWidgetData.swift in Sources */,
 			);
@@ -340,9 +363,14 @@
 				3CF240E54733FDB703E97397 /* BarcodeLookupService.swift in Sources */,
 				4E9297E51426B64EF169CE72 /* BarcodeScannerView.swift in Sources */,
 				360AFA616726E68790F3B03E /* CameraPicker.swift in Sources */,
+				F7EB64D8309035432900C6C3 /* ConsistencyChart.swift in Sources */,
 				7CDEC74F87C7E914CA112D4A /* CutLogApp.swift in Sources */,
+				17D2D72414BBF041D4DB1050 /* CutLogPalette.swift in Sources */,
+				AB05D80DF870ECDD09E538F7 /* CutLogStyle.swift in Sources */,
 				06AC767B161545ED821C903B /* CutLogWidgetData.swift in Sources */,
+				1423D1C07A75C8C806207F91 /* CutScoreView.swift in Sources */,
 				ED18A6F29D3319E36A7C012C /* ExerciseDBService.swift in Sources */,
+				B95E4C71CEB26DDA0EF342DD /* FoodSearch.swift in Sources */,
 				C65D58C383DBEE0CC95AB7E1 /* HealthKitStore.swift in Sources */,
 				7295EB02EFF3AE47C09370D8 /* HistoryView.swift in Sources */,
 				865CC5F29C75EB9BBFE241C7 /* KeychainStore.swift in Sources */,

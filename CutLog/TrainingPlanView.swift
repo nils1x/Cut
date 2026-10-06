@@ -14,37 +14,44 @@ struct TrainingPlanView: View {
 	var body: some View {
 		NavigationStack {
 			ScrollView {
-				VStack(alignment: .leading, spacing: 16) {
-					Button { showingWorkout = true } label: {
-						NextWorkoutCard(template: nextTemplate, date: store.launchWorkout.date, isDue: store.workoutIsDue, isResuming: !store.unfinishedWorkouts.isEmpty)
+				VStack(alignment: .leading, spacing: CutLogStyle.Space.xl) {
+					SectionLabel("Plan") {
+						Button("Edit") { showingPlanEditor = true }
+							.font(.subheadline.weight(.medium))
 					}
-					.buttonStyle(.plain)
 
-					VStack(alignment: .leading, spacing: 8) {
-						Text("This week")
-							.font(.headline)
-						ForEach(WorkoutSchedule.weeklySchedule) { scheduled in
-							if let template = store.template(for: scheduled.templateID) {
-								Button { selectedTemplate = template } label: {
-									WeekRow(scheduled: scheduled, template: template, isToday: scheduled.weekday == Calendar.current.component(.weekday, from: .now), isDone: scheduled.weekday == Calendar.current.component(.weekday, from: .now) && !store.workoutIsDue)
+					NextWorkoutCard(template: nextTemplate, date: store.launchWorkout.date, isDue: store.workoutIsDue, isResuming: !store.unfinishedWorkouts.isEmpty) {
+						showingWorkout = true
+					} onOpen: {
+						selectedTemplate = nextTemplate
+					}
+
+					VStack(alignment: .leading, spacing: CutLogStyle.Space.s) {
+						SectionLabel("This week")
+						HStack(spacing: CutLogStyle.Space.s) {
+							ForEach(WorkoutSchedule.weeklySchedule) { scheduled in
+								if let template = store.template(for: scheduled.templateID) {
+									WeekCell(scheduled: scheduled, template: template,
+									         isToday: scheduled.weekday == Calendar.current.component(.weekday, from: .now),
+									         isDone: isCompleted(scheduled)) { selectedTemplate = template }
 								}
-								.buttonStyle(.plain)
 							}
 						}
 					}
-					.padding(16)
-					.background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
 
-					PlanRuleCard()
+					DisclosureGroup {
+						Text("Start around 2,400–2,500 kcal and 180–210 g protein. Judge weight from the 7-day average, not one weird Tuesday. If the 14-day trend stalls, add 1,500–2,000 steps first; then cut 100–150 kcal.")
+							.font(.subheadline)
+							.foregroundStyle(.secondary)
+				 } label: {
+						Text("Keep the cut boring")
+							.font(.headline)
+					}
 				}
-				.padding()
+				.padding(.horizontal, CutLogStyle.Space.l)
+				.padding(.vertical, CutLogStyle.Space.l)
 			}
-			.navigationTitle("Plan")
-			.toolbar {
-				ToolbarItem(placement: .primaryAction) {
-					Button("Edit") { showingPlanEditor = true }
-				}
-			}
+			.toolbar(.hidden, for: .navigationBar)
 			.sheet(isPresented: $showingWorkout) {
 				if store.unfinishedWorkouts.isEmpty && store.workoutIsDue {
 					WorkoutView(template: store.launchWorkout.template)
@@ -60,81 +67,109 @@ struct TrainingPlanView: View {
 			}
 		}
 	}
+
+	/// A scheduled day is done when that exact template was completed on that exact weekday.
+	private func isCompleted(_ scheduled: ScheduledWorkout) -> Bool {
+		store.workouts.contains { workout in
+			workout.templateID == scheduled.templateID
+				&& workout.completedSetCount > 0
+				&& Calendar.current.component(.weekday, from: workout.startedAt ?? workout.completedAt) == scheduled.weekday
+		}
+	}
 }
 
+/// Training is the point of the app, so the session leads the tab. Two independent targets:
+/// the button starts the session, the rest of the card opens the detail.
 private struct NextWorkoutCard: View {
 	let template: WorkoutTemplate
 	let date: Date
 	let isDue: Bool
 	let isResuming: Bool
+	let start: () -> Void
+	let onOpen: () -> Void
+
+	private var whenLabel: String {
+		if isResuming { return "Choose session" }
+		return Calendar.current.isDateInToday(date) ? "Today" : date.formatted(.dateTime.weekday(.wide))
+	}
 
 	var body: some View {
-		VStack(alignment: .leading, spacing: 12) {
-			HStack {
-				Label(isResuming ? "Choose session" : (Calendar.current.isDateInToday(date) ? "Today" : date.formatted(.dateTime.weekday(.wide))), systemImage: "figure.strengthtraining.traditional")
-					.font(.subheadline.weight(.semibold))
-					.foregroundStyle(CutLogStyle.accent)
-				Spacer()
-				Image(systemName: "arrow.right.circle.fill")
-					.font(.title3)
-					.foregroundStyle(CutLogStyle.accent)
+		Card(padding: CutLogStyle.Space.l) {
+			VStack(alignment: .leading, spacing: CutLogStyle.Space.m) {
+				Button(action: onOpen) {
+					VStack(alignment: .leading, spacing: CutLogStyle.Space.s) {
+						SectionLabel(whenLabel) {
+							Image(systemName: "chevron.right")
+								.font(.caption.weight(.semibold))
+								.foregroundStyle(.tertiary)
+						}
+						Text(template.title)
+							.font(.title2.weight(.bold))
+							.foregroundStyle(.primary)
+						Text(template.subtitle)
+							.foregroundStyle(.secondary)
+						HStack(spacing: CutLogStyle.Space.l) {
+							Label("~\(template.estimatedMinutes) min", systemImage: "clock")
+							Label("\(template.exercises.count) exercises", systemImage: "dumbbell")
+						}
+						.font(CutLogStyle.Number.label)
+						.foregroundStyle(.secondary)
+					}
+					.frame(maxWidth: .infinity, alignment: .leading)
+					.contentShape(Rectangle())
+				}
+				.buttonStyle(.plain)
+
+				Button(action: start) {
+					Text(isResuming ? "Choose session" : "Start \(template.title)")
+						.font(.headline)
+						.frame(maxWidth: .infinity, minHeight: 48)
+				}
+				.buttonStyle(.borderedProminent)
+				.tint(isDue || isResuming ? CutLogPalette.sage : CutLogPalette.apricot)
+				.accessibilityHint("Opens the workout.")
 			}
-			Text(template.title)
-				.font(.title2.weight(.bold))
-			Text(template.subtitle)
-				.foregroundStyle(.secondary)
-			HStack(spacing: 14) {
-				Label("~\(template.estimatedMinutes) min", systemImage: "clock")
-				Label("\(template.exercises.count) exercises", systemImage: "dumbbell")
-			}
-			.font(.caption.weight(.medium))
-			.foregroundStyle(.secondary)
 		}
-		.padding(20)
-		.frame(maxWidth: .infinity, alignment: .leading)
-		.background(CutLogStyle.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
 	}
 }
 
-private struct WeekRow: View {
+/// The whole week visible without scrolling: four compact day cells.
+private struct WeekCell: View {
 	let scheduled: ScheduledWorkout
 	let template: WorkoutTemplate
 	let isToday: Bool
 	let isDone: Bool
+	let action: () -> Void
 
-	var body: some View {
-		HStack(spacing: 12) {
-			Text(scheduled.shortDay)
-				.font(.caption.weight(.bold))
-				.foregroundStyle(isToday ? CutLogStyle.accent : .secondary)
-				.frame(width: 32, alignment: .leading)
-			VStack(alignment: .leading, spacing: 2) {
-				Text(template.title).foregroundStyle(.primary)
-				Text(template.subtitle).font(.caption).foregroundStyle(.secondary)
-			}
-			Spacer()
-			if isToday {
-				Image(systemName: isDone ? "checkmark.circle.fill" : "circle.fill")
-					.foregroundStyle(isDone ? .green : CutLogStyle.accent)
-			} else {
-				Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
-			}
-		}
-		.padding(.vertical, 7)
+	private var initial: String {
+		String(template.title.prefix(1))
 	}
-}
 
-private struct PlanRuleCard: View {
 	var body: some View {
-		VStack(alignment: .leading, spacing: 9) {
-			Label("Keep the cut boring", systemImage: "chart.line.downtrend.xyaxis")
-				.font(.headline)
-			Text("Start around 2,400–2,500 kcal and 180–210 g protein. Judge weight from the 7-day average, not one weird Tuesday. If the 14-day trend stalls, add 1,500–2,000 steps first; then cut 100–150 kcal.")
-				.font(.subheadline)
-				.foregroundStyle(.secondary)
+		Button(action: action) {
+			VStack(spacing: CutLogStyle.Space.xs) {
+				Text(scheduled.shortDay)
+					.font(CutLogStyle.Number.label)
+					.foregroundStyle(.secondary)
+				Text(initial)
+					.font(.headline)
+					.foregroundStyle(isToday ? CutLogPalette.sage : .primary)
+					.frame(width: 34, height: 34)
+					.background(isDone ? CutLogPalette.sage.opacity(0.18) : CutLogPalette.surface,
+					            in: Circle())
+					.overlay {
+						Circle().strokeBorder(isToday ? CutLogPalette.sage.opacity(0.5) : CutLogPalette.hairline,
+						                      lineWidth: isToday ? 1 : 0.5)
+					}
+				Circle()
+					.fill(isDone ? CutLogPalette.sage : Color.clear)
+					.frame(width: 4, height: 4)
+			}
+			.frame(maxWidth: .infinity)
+			.contentShape(Rectangle())
 		}
-		.padding(16)
-		.background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+		.buttonStyle(.plain)
+		.accessibilityLabel("\(scheduled.shortDay), \(template.title)\(isDone ? ", completed" : (isToday ? ", today" : ""))")
 	}
 }
 
@@ -196,7 +231,7 @@ private struct ExerciseDetailView: View {
 				VStack(alignment: .leading, spacing: 20) {
 					Text(exercise.muscleGroup.uppercased())
 						.font(.caption.weight(.bold))
-.foregroundStyle(CutLogStyle.accent)
+.foregroundStyle(CutLogPalette.sage)
 					Text(exercise.name).font(.title2.weight(.bold))
 					HStack(spacing: 8) {
 						Pill("\(exercise.sets) sets", "number")

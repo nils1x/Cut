@@ -12,6 +12,7 @@ final class AppStore {
 	var trainingPlan: TrainingPlan { didSet { save(trainingPlan, key: Keys.trainingPlan) } }
 	private(set) var activeWorkout: WorkoutDraft? { didSet { save(activeWorkout, key: Keys.activeWorkout) } }
 	private(set) var pausedWorkouts: [WorkoutDraft] { didSet { save(pausedWorkouts, key: Keys.pausedWorkouts) } }
+	private(set) var foodCatalog: [FoodCatalogItem] = [] { didSet { save(foodCatalog, key: Keys.foodCatalog) } }
 	var healthSyncError: String?
 	private let defaults: UserDefaults
 	private let sideEffectsEnabled: Bool
@@ -25,6 +26,7 @@ final class AppStore {
 		static let trainingPlan = "training-plan-v2"
 		static let activeWorkout = "active-workout-v1"
 		static let pausedWorkouts = "paused-workouts-v1"
+		static let foodCatalog = "food-catalog-v1"
 	}
 
 	// An injected suite isolates both storage and external effects in tests.
@@ -42,6 +44,11 @@ final class AppStore {
 		trainingPlan = Self.upgradeTrainingPlan(savedPlan)
 		activeWorkout = Self.load(WorkoutDraft.self, key: Keys.activeWorkout, defaults: storage)
 		pausedWorkouts = Self.load([WorkoutDraft].self, key: Keys.pausedWorkouts, defaults: storage) ?? []
+		if let savedCatalog = Self.load([FoodCatalogItem].self, key: Keys.foodCatalog, defaults: storage) {
+			foodCatalog = savedCatalog
+		} else {
+			foodCatalog = FoodCatalog.build(from: foods)
+		}
 		// Recover an interrupted finish without creating a second history entry.
 		if let draft = activeWorkout, workouts.contains(where: { $0.id == draft.id }) {
 			activeWorkout = pausedWorkouts.last { paused in !workouts.contains(where: { $0.id == paused.id }) }
@@ -59,32 +66,37 @@ final class AppStore {
 		foods.filter { Calendar.current.isDateInToday($0.date) }.sorted { $0.date > $1.date }
 	}
 
-	var quickLogFoods: [FoodEntry] { pinnedFoods }
-
-	var recentFoods: [FoodEntry] {
-		var seen = Set<String>()
-		return foods.sorted { $0.date > $1.date }.filter { entry in
-			let key = foodKey(for: entry)
-			return !isPinned(entry) && seen.insert(key).inserted
-		}.prefix(8).map { $0 }
+	func recordCatalogUse(of food: FoodEntry) {
+		let id = FoodCatalog.key(for: food)
+		if let index = foodCatalog.firstIndex(where: { $0.id == id }) {
+			foodCatalog[index].absorb(food)
+		} else {
+			foodCatalog.append(FoodCatalogItem(food: food, id: id))
+		}
 	}
 
+	func searchFoods(query: String) -> [FoodCatalogItem] {
+		FoodSearch.search(foodCatalog, query: query)
+	}
+
+	/// Most-used catalog entries, used when the search field is empty.
+	var relogFavorites: [FoodCatalogItem] {
+		FoodSearch.search(foodCatalog, query: "")
+	}
+
+	var quickLogFoods: [FoodEntry] { pinnedFoods }
+
 	func isPinned(_ food: FoodEntry) -> Bool {
-		pinnedFoods.contains { foodKey(for: $0) == foodKey(for: food) }
+		pinnedFoods.contains { FoodCatalog.key(for: $0) == FoodCatalog.key(for: food) }
 	}
 
 	func togglePinned(_ food: FoodEntry) {
-		let key = foodKey(for: food)
-		if let index = pinnedFoods.firstIndex(where: { foodKey(for: $0) == key }) {
+		let key = FoodCatalog.key(for: food)
+		if let index = pinnedFoods.firstIndex(where: { FoodCatalog.key(for: $0) == key }) {
 			pinnedFoods.remove(at: index)
 		} else {
 			pinnedFoods.append(food)
 		}
-	}
-
-	private func foodKey(for food: FoodEntry) -> String {
-		let barcode = food.barcode ?? ""
-		return "\(food.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())|\(food.calories)|\(food.protein)|\(food.carbs)|\(food.fat)|\(food.servingGrams ?? 0)|\(barcode)"
 	}
 
 	var todayTotals: DailyTotals {
@@ -126,6 +138,16 @@ final class AppStore {
 	var workoutIsDue: Bool { WorkoutSchedule.isDue(workouts: workouts) }
 	var latestWeight: WeightEntry? { weights.max(by: { $0.date < $1.date }) }
 	var loggingStreak: Int { loggingStreak(for: foods.map(\.date) + weights.map(\.date)) }
+
+	/// One entry per calendar day, oldest first. A day counts when food OR weight was logged.
+	func consistencyDays(days: Int = 30, now: Date = .now, calendar: Calendar = .current) -> [(date: Date, logged: Bool)] {
+		Consistency.days(loggedDates: foods.map(\.date) + weights.map(\.date), days: days, now: now, calendar: calendar)
+	}
+
+	/// Same window as `consistencyDays`, but each day carries a completion level for the grid.
+	func consistencyLevels(days: Int = 30, now: Date = .now, calendar: Calendar = .current) -> [ConsistencyDay] {
+		Consistency.levels(foods: foods, weights: weights, workouts: workouts, days: days, now: now, calendar: calendar)
+	}
 
 	func loggingStreak(for dates: [Date], now: Date = .now, calendar: Calendar = .current) -> Int {
 		let loggedDays = Set(dates.map { calendar.startOfDay(for: $0) })
@@ -267,6 +289,7 @@ final class AppStore {
 
 	func addFood(_ food: FoodEntry) {
 		foods.append(food)
+		recordCatalogUse(of: food)
 		guard sideEffectsEnabled && settings.healthSyncEnabled else { return }
 		Task {
 			do { try await HealthKitStore.shared.save(food: food) }

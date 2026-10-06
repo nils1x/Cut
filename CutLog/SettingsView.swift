@@ -70,6 +70,19 @@ struct SettingsView: View {
                     Text("Uses Apple Intelligence on-device when available. It makes a quick estimate from a photo; always edit it if it looks wrong.")
                         .foregroundStyle(.secondary)
                 }
+                Section("Cut score") {
+                    NavigationLink {
+                        CutScoreView()
+                    } label: {
+                        HStack {
+                            Text(cutScoreSummary)
+                            Spacer()
+                        }
+                    }
+                    Text("A product consistency score from your own logged food, protein and training over the previous 7 days. Not a medical, fitness or total health assessment.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
                 Section("Privacy") {
                     Text("No account, ads or backend. Food, weight, goals and workouts stay in local app storage. Barcode lookup sends only the scanned product code to Open Food Facts. Exercise tutorials use your optional RapidAPI key only when opened.")
                         .foregroundStyle(.secondary)
@@ -89,6 +102,15 @@ struct SettingsView: View {
                 Text(healthError ?? "")
             }
         }
+    }
+
+    private var cutScoreSummary: String {
+        guard let snapshot = CutScore.calculate(foods: store.foods, workouts: store.workouts,
+                                                calorieGoal: store.settings.calorieGoal,
+                                                proteinGoal: store.settings.proteinGoal) else {
+            return "Log 3 days to unlock"
+        }
+        return "Last 7 days · \(snapshot.score)/100"
     }
 
     private func connectHealth() {

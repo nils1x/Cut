@@ -13,6 +13,7 @@ struct AddFoodView: View {
 
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @State private var search = ""
     @State private var name = ""
     @State private var mealDescription = ""
     @State private var calories = ""
@@ -34,6 +35,10 @@ struct AddFoodView: View {
         self.startMode = startMode
         _showingBarcodeScanner = State(initialValue: startMode == .barcode)
     }
+
+    private var isSearching: Bool { !search.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+    private var results: [FoodCatalogItem] { store.searchFoods(query: search) }
 
     private var isValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -58,12 +63,19 @@ struct AddFoodView: View {
                             .buttonStyle(.borderedProminent)
                             .padding()
                     }
+                } else if isSearching {
+                    resultsList
                 } else {
                     foodForm
                 }
             }
-            .navigationTitle(showingBarcodeScanner ? "Scan barcode" : "Add food")
+            .navigationTitle(showingBarcodeScanner ? "Scan barcode" : (isSearching ? "Log again" : "Add food"))
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $search, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search logged food")
+            .onChange(of: search) { _, value in
+                guard !value.isEmpty else { return }
+                showingBarcodeScanner = false
+            }
             .onAppear {
                 guard !hasStartedFlow else { return }
                 hasStartedFlow = true
@@ -71,7 +83,9 @@ struct AddFoodView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    if !showingBarcodeScanner { Button("Save") { save() }.disabled(!isValid || isEstimating || isLookingUpBarcode) }
+                    if !showingBarcodeScanner && !isSearching {
+                        Button("Save") { save() }.disabled(!isValid || isEstimating || isLookingUpBarcode)
+                    }
                 }
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
             }
@@ -81,6 +95,42 @@ struct AddFoodView: View {
                     Task { await estimate(image) }
                 } onCancel: { showingCamera = false }
                 .ignoresSafeArea()
+            }
+        }
+    }
+
+    private var resultsList: some View {
+        List {
+            if results.isEmpty {
+                ContentUnavailableView.search(text: search)
+            } else {
+                Section {
+                    ForEach(results) { item in
+                        Button { log(item) } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(item.name).foregroundStyle(.primary)
+                                    Text("\(item.calories) kcal · P \(item.protein) g")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button { fill(from: item) } label: {
+                                Label("Edit portion", systemImage: "slider.horizontal.3")
+                            }
+                        }
+                        .swipeActions {
+                            Button { fill(from: item) } label: {
+                                Label("Edit", systemImage: "slider.horizontal.3")
+                            }
+                            .tint(CutLogPalette.apricot)
+                        }
+                    }
+                }
             }
         }
     }
@@ -106,10 +156,6 @@ struct AddFoodView: View {
                         Label(isLookingUpBarcode ? "Looking up barcode…" : "Scan barcode", systemImage: "barcode.viewfinder")
                     }
                     .disabled(isLookingUpBarcode)
-
-                    Text("Photo estimates run through Apple Intelligence. Barcode scans use public product nutrition facts and, when available, prefill the package size. Review everything before saving.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
                 }
 
                 if !store.quickLogFoods.isEmpty {
@@ -120,10 +166,21 @@ struct AddFoodView: View {
                     }
                 }
 
-                if !store.recentFoods.isEmpty {
-                    Section("Recents") {
-                        ForEach(store.recentFoods) { food in
-                            savedFoodRow(food)
+                if !store.relogFavorites.isEmpty {
+                    Section("Log again") {
+                        ForEach(store.relogFavorites) { item in
+                            Button { log(item) } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(item.name).foregroundStyle(.primary)
+                                        Text("\(item.calories) kcal · P \(item.protein) g")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -135,8 +192,6 @@ struct AddFoodView: View {
                         Button("Estimate") { Task { await estimateDescription() } }
                             .disabled(mealDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isEstimating)
                     }
-                    Text("Estimates the whole portion. Review before saving.")
-                        .font(.footnote).foregroundStyle(.secondary)
                 }
 
                 Section("Meal") {
@@ -176,6 +231,12 @@ struct AddFoodView: View {
             .disabled(isEstimating || isLookingUpBarcode)
     }
 
+    /// Tap a catalog hit: log the same portion immediately.
+    private func log(_ item: FoodCatalogItem) {
+        store.addFood(item.entry())
+        dismiss()
+    }
+
     private func savedFoodRow(_ food: FoodEntry) -> some View {
         HStack(spacing: 12) {
             Button { fill(from: food) } label: {
@@ -197,7 +258,7 @@ struct AddFoodView: View {
                 }
             } label: {
                 Image(systemName: store.isPinned(food) ? "pin.fill" : "pin")
-                    .foregroundStyle(store.isPinned(food) ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(store.isPinned(food) ? CutLogPalette.apricot : Color.secondary)
                     .frame(minWidth: 44, minHeight: 44)
             }
             .accessibilityLabel(store.isPinned(food) ? "Remove \(food.name) from Quick log" : "Pin \(food.name) to Quick log")
@@ -244,6 +305,12 @@ struct AddFoodView: View {
         defer { isEstimating = false }
         do {
             let result = try await MealEstimateService.estimate(description: description)
+            guard MealEstimateService.matchesDescription(result.name, describedAs: description) else {
+                throw MealEstimateService.EstimateError.unrelatedResult
+            }
+            guard MealEstimateService.isPlausibleNutrition(result) else {
+                throw MealEstimateService.EstimateError.implausibleNutrition
+            }
             name = result.name
             calories = String(result.calories)
             protein = String(result.protein)
@@ -303,6 +370,7 @@ struct AddFoodView: View {
     }
 
     private func fill(from food: FoodEntry) {
+        search = ""
         scannedProduct = nil
         name = food.name
         calories = String(food.calories)
@@ -311,6 +379,10 @@ struct AddFoodView: View {
         fat = String(food.fat)
         servingGrams = food.servingGrams.map { String(format: "%.0f", $0) } ?? ""
         barcode = food.barcode
+    }
+
+    private func fill(from item: FoodCatalogItem) {
+        fill(from: item.entry())
     }
 
     private func save() {
