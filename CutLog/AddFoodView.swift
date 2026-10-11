@@ -20,7 +20,7 @@ struct AddFoodView: View {
     @State private var protein = ""
     @State private var carbs = ""
     @State private var fat = ""
-    @State private var servingGrams = "100"
+    @State private var servingGrams = ""
     @State private var barcode: String?
     @State private var scannedProduct: BarcodeProduct?
     @State private var selectedPhoto: PhotosPickerItem?

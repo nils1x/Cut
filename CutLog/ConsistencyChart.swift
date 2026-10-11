@@ -1,8 +1,5 @@
 import SwiftUI
 
-/// GitHub-style contribution grid of the last 30 calendar days. Seven columns per week,
-/// oldest row on top. Level rises with how complete the day was, same direction as GitHub:
-/// more things logged means a more saturated cell.
 struct ConsistencyChart: View {
 	let days: [ConsistencyDay]
 	var columns = 7
